@@ -1,0 +1,67 @@
+import { defaultSettings, SCHEMA_VERSION, type DataState } from '@/store/useData';
+
+export type BackupData = Omit<DataState, 'session' | 'rest'>;
+
+export interface BackupFile {
+  app: 'forge';
+  version: number;
+  exportedAt: string;
+  data: BackupData;
+}
+
+export function makeBackup(s: DataState): BackupFile {
+  const { session: _session, rest: _rest, ...data } = s;
+  return { app: 'forge', version: SCHEMA_VERSION, exportedAt: new Date().toISOString(), data };
+}
+
+const isArr = (v: unknown): v is unknown[] => Array.isArray(v);
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !isArray(v);
+const isArray = Array.isArray;
+
+/** Validate an imported backup. Throws with a user-readable message on failure. */
+export function parseBackup(text: string): BackupData {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new Error('That file is not valid JSON.');
+  }
+  if (!isObj(raw) || raw.app !== 'forge' || !isObj(raw.data)) throw new Error('That file is not a Forge backup.');
+  if (typeof raw.version !== 'number' || raw.version > SCHEMA_VERSION) {
+    throw new Error('This backup was made by a newer version of Forge.');
+  }
+  const d = raw.data;
+  const arrays = ['workouts', 'routines', 'splits', 'bodyWeights', 'measurements', 'photos', 'customExercises'] as const;
+  for (const k of arrays) {
+    if (d[k] !== undefined && !isArr(d[k])) throw new Error(`Backup is corrupted (${k}).`);
+  }
+  const workouts = (d.workouts as unknown[] | undefined) ?? [];
+  for (const w of workouts) {
+    if (!isObj(w) || typeof w.id !== 'string' || typeof w.startedAt !== 'string' || !isArr(w.exercises)) {
+      throw new Error('Backup contains an invalid workout.');
+    }
+  }
+  return {
+    settings: { ...defaultSettings(), ...(isObj(d.settings) ? (d.settings as object) : {}) },
+    workouts: workouts as BackupData['workouts'],
+    routines: (d.routines as BackupData['routines']) ?? [],
+    splits: (d.splits as BackupData['splits']) ?? [],
+    bodyWeights: (d.bodyWeights as BackupData['bodyWeights']) ?? [],
+    measurements: (d.measurements as BackupData['measurements']) ?? [],
+    // Photo blobs aren't part of JSON backups; drop metadata that would point nowhere.
+    photos: [],
+    customExercises: (d.customExercises as BackupData['customExercises']) ?? [],
+  };
+}
+
+export function downloadJSON(filename: string, obj: unknown) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

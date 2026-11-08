@@ -1,0 +1,79 @@
+.ex-thumb {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  padding: 4px 2px 2px;
+  overflow: hidden;
+  --fig-ground: transparent;
+}
+.picker-list {
+  margin-top: 10px;
+}
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 4px;
+  text-align: left;
+  border-radius: 14px;
+  transition: background 0.15s;
+}
+.picker-item:active {
+  background: var(--surface-2);
+}
+.picker-item.is-selected {
+  background: var(--accent-soft);
+}
+.picker-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.picker-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+.picker-sub {
+  font-size: 13.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.picker-check {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  margin-right: 6px;
+}
+.is-selected .picker-check {
+  background: var(--accent);
+  border-color: var(--accent-fg);
+  color: var(--accent-ink);
+}
+.picker-footer {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 0 4px;
+  background: linear-gradient(to top, var(--surface) 70%, transparent);
+}
+.picker-empty {
+  text-align: center;
+  color: var(--text-2);
+  padding: 32px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}

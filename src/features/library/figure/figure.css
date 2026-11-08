@@ -1,0 +1,55 @@
+/* Colours come from theme tokens in styles/global.css (dark + light). */
+.fig {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.fig line {
+  stroke-linecap: round;
+}
+.fig-ground {
+  stroke: var(--fig-ground);
+  stroke-width: 2;
+}
+.fig-limb,
+.fig-torso {
+  stroke: var(--fig-body);
+}
+.fig-head {
+  fill: var(--fig-body);
+}
+.fig-far {
+  opacity: 0.38;
+}
+.fig-prop {
+  stroke: var(--fig-prop);
+  fill: none;
+}
+.fig-box {
+  fill: var(--fig-prop-fill);
+  stroke: var(--fig-prop);
+  stroke-width: 2;
+}
+.fig-plate {
+  fill: color-mix(in srgb, var(--fig-equip) 18%, transparent);
+  stroke: var(--fig-equip);
+  stroke-width: 2.5;
+}
+.fig-hub {
+  fill: var(--fig-equip);
+}
+.fig-pulley {
+  fill: none;
+  stroke: var(--fig-prop);
+  stroke-width: 2.5;
+}
+.fig-cable {
+  stroke: var(--fig-prop);
+  stroke-width: 1.5;
+}
+.fig-band {
+  stroke: var(--orange);
+  stroke-width: 3;
+  opacity: 0.85;
+}

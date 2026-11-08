@@ -1,0 +1,221 @@
+.wo-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.wo-add {
+  margin-top: 4px;
+  color: var(--accent-fg);
+  background: var(--accent-soft);
+}
+.ex-block {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 12px 0 6px;
+  overflow: hidden;
+}
+.ex-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 8px 12px;
+}
+.ex-head-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.ex-thumb-sm {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+.ex-title {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ex-name {
+  font-size: 17px;
+  font-weight: 650;
+  color: var(--accent-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ex-meta {
+  font-size: 13px;
+  color: var(--text-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.set-grid {
+  --cols: 38px minmax(0, 1fr) 70px 60px 44px;
+}
+.set-grid-reps,
+.set-grid-time {
+  --cols: 38px minmax(0, 1fr) 76px 44px;
+}
+.set-grid.is-edit {
+  --cols: 38px minmax(0, 1fr) 76px 66px;
+}
+.set-grid-reps.is-edit,
+.set-grid-time.is-edit {
+  --cols: 38px minmax(0, 1fr) 90px;
+}
+.set-hdr,
+.set-row {
+  display: grid;
+  grid-template-columns: var(--cols);
+  gap: 8px;
+  align-items: center;
+  padding: 0 12px;
+}
+.set-hdr {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  height: 26px;
+}
+.set-hdr span {
+  text-align: center;
+}
+.set-hdr span:nth-child(2) {
+  text-align: left;
+  padding-left: 4px;
+}
+.set-hdr-check {
+  display: flex;
+  justify-content: center;
+}
+.set-row {
+  height: 48px;
+  background: var(--surface);
+  transition: background 0.25s;
+}
+.set-row.is-done {
+  /* opaque so the swipe-to-delete action underneath never shows through */
+  background: linear-gradient(rgba(200, 255, 61, 0.09), rgba(200, 255, 61, 0.09)), var(--surface);
+}
+.set-row.is-shake {
+  animation: shake 0.36s;
+}
+@keyframes shake {
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.set-type {
+  height: 30px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--surface-2);
+  font-family: var(--font-rounded);
+}
+.set-type-warmup {
+  color: var(--orange);
+}
+.set-type-drop {
+  color: var(--purple);
+}
+.set-type-failure {
+  color: var(--red);
+}
+.set-prev {
+  text-align: left;
+  padding-left: 4px;
+  font-size: 14px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-rounded);
+  font-variant-numeric: tabular-nums;
+}
+.set-input {
+  width: 100%;
+  height: 34px;
+  border-radius: 9px;
+  border: 0;
+  background: var(--surface-2);
+  text-align: center;
+  font-size: 17px;
+  font-weight: 600;
+  padding: 0 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.set-input::placeholder {
+  color: var(--text-3);
+  font-weight: 500;
+}
+.set-input:focus {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.is-done .set-input {
+  background: transparent;
+}
+.set-check {
+  width: 40px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  transition: background 0.2s, color 0.2s, transform 0.2s var(--ease-spring);
+}
+.set-check:active {
+  transform: scale(0.88);
+}
+.set-check.is-on {
+  background: var(--accent);
+  color: var(--accent-ink);
+  animation: pop 0.34s var(--ease-spring);
+}
+@keyframes pop {
+  50% { transform: scale(1.14); }
+}
+.ex-add-set {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 6px 12px 4px;
+  width: calc(100% - 24px);
+  height: 36px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.ex-add-set:active {
+  background: var(--surface-3);
+}
+.rest-picker {
+  text-align: center;
+  padding-top: 4px;
+}
+.rest-picker-main {
+  margin: 22px 0;
+  display: flex;
+  justify-content: center;
+  transform: scale(1.25);
+}
+.rest-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}

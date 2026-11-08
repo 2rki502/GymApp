@@ -1,0 +1,269 @@
+.session {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  animation: sheet-in 0.44s var(--ease-spring) both;
+}
+.session.is-closing {
+  animation: sheet-out 0.3s ease-in both;
+}
+.session-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(var(--safe-top) + 6px) calc(var(--gutter) + var(--safe-right)) 8px calc(var(--gutter) + var(--safe-left));
+  border-bottom: 0.5px solid var(--separator);
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+.session-clock {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--accent-fg);
+}
+.session-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 16px calc(var(--gutter) + var(--safe-right)) calc(140px + var(--safe-bottom)) calc(var(--gutter) + var(--safe-left));
+}
+.session-head {
+  margin-bottom: 16px;
+}
+.session-name {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+.session-name-input {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  background: var(--surface-2);
+  border: 0;
+  border-radius: 10px;
+  padding: 2px 8px;
+  width: 100%;
+}
+.session-stats,
+.summary-stats {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+.session-stats > div,
+.summary-stats > div {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+}
+.session-stats span,
+.summary-stats span {
+  font-size: 19px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.session-stats label,
+.summary-stats label {
+  font-size: 12px;
+  color: var(--text-2);
+}
+.session-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-2);
+  padding: 28px 0 18px;
+}
+.session-cancel {
+  margin-top: 22px;
+}
+
+.rest-panel {
+  position: absolute;
+  left: calc(10px + var(--safe-left));
+  right: calc(10px + var(--safe-right));
+  bottom: calc(10px + var(--safe-bottom));
+  border-radius: 20px;
+  background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+  box-shadow: 0 12px 40px var(--shadow);
+  overflow: hidden;
+  animation: sheet-in 0.4s var(--ease-spring) both;
+}
+.rest-progress {
+  position: absolute;
+  inset: 0;
+  background: var(--accent-soft);
+  transform-origin: left;
+  transition: transform 0.25s linear;
+}
+.rest-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+.rest-time {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.rest-time .num {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+.rest-btn {
+  height: 40px;
+  min-width: 52px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: var(--fill-soft);
+  font-weight: 600;
+  font-size: 15px;
+  font-family: var(--font-rounded);
+}
+.rest-btn:active {
+  background: var(--fill-strong);
+}
+.rest-skip {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font);
+}
+
+.mini-bar {
+  position: fixed;
+  z-index: 39;
+  left: calc(10px + var(--safe-left));
+  right: calc(10px + var(--safe-right));
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 8px);
+  height: 58px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+  box-shadow: 0 10px 30px var(--shadow);
+  text-align: left;
+  animation: sheet-in 0.4s var(--ease-spring) both;
+}
+.mini-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mini-main strong {
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mini-main .num {
+  font-size: 14px;
+  color: var(--accent-fg);
+  font-weight: 600;
+}
+.mini-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 rgba(200, 255, 61, 0.6);
+  animation: pulse 1.8s infinite;
+}
+@keyframes pulse {
+  70% { box-shadow: 0 0 0 10px rgba(200, 255, 61, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(200, 255, 61, 0); }
+}
+
+.summary {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.summary-burst {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin: 8px auto 14px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  isolation: isolate; /* keep the rings behind the tick but in front of the sheet */
+  animation: pop 0.5s var(--ease-spring), burst-breathe 2.4s ease-in-out 0.5s infinite;
+  box-shadow: 0 0 0 10px var(--accent-soft);
+}
+/* Two staggered rings radiating out from the tick */
+.summary-burst::before,
+.summary-burst::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  z-index: -1;
+  animation: burst-ring 2.4s cubic-bezier(0.22, 1, 0.36, 1) 0.4s infinite;
+}
+.summary-burst::after {
+  animation-delay: 1.6s;
+}
+@keyframes burst-ring {
+  0% { transform: scale(1); opacity: 0.45; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+@keyframes burst-breathe {
+  0%, 100% { box-shadow: 0 0 0 10px var(--accent-soft); }
+  50% { box-shadow: 0 0 0 14px rgba(200, 255, 61, 0.22); }
+}
+.summary h2 {
+  font-size: 26px;
+  font-weight: 700;
+}
+.summary-prs {
+  margin-top: 18px;
+  background: var(--surface-2);
+  border-radius: 16px;
+  padding: 12px 14px;
+  text-align: left;
+}
+.summary-prs .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.summary-pr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-weight: 500;
+}

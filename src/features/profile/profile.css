@@ -1,0 +1,97 @@
+.profile-card {
+  background: radial-gradient(120% 100% at 50% 0%, rgba(200, 255, 61, 0.12), transparent 60%), var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 22px 16px 16px;
+  text-align: center;
+  margin-top: 6px;
+}
+.profile-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  background: linear-gradient(135deg, var(--accent), #7ad83a);
+  color: var(--accent-ink);
+  font-size: 34px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-rounded);
+}
+.profile-name {
+  background: none;
+  border: 0;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  width: 100%;
+  padding: 2px;
+  border-radius: 8px;
+}
+.profile-name:focus {
+  background: var(--surface-2);
+}
+.profile-name::placeholder {
+  color: var(--text-3);
+}
+.profile-card .faint {
+  font-size: 13.5px;
+}
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 16px;
+  border-top: 0.5px solid var(--separator);
+  padding-top: 14px;
+}
+.profile-stats > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.profile-stats > div + div {
+  border-left: 0.5px solid var(--separator);
+}
+.profile-stats span {
+  font-size: 19px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.profile-stats label {
+  font-size: 12px;
+  color: var(--text-2);
+}
+.units-seg {
+  width: 150px;
+}
+.theme-seg {
+  width: 186px;
+}
+.install-steps {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.install-steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  flex-wrap: wrap;
+}
+.install-steps li > .num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}

@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import { defaultSettings, SCHEMA_VERSION, type DataState } from '@/store/useData';
 
 export type BackupData = Omit<DataState, 'session' | 'rest'>;
@@ -24,21 +25,21 @@ export function parseBackup(text: string): BackupData {
   try {
     raw = JSON.parse(text);
   } catch {
-    throw new Error('That file is not valid JSON.');
+    throw new Error(t('backup.notJson'));
   }
-  if (!isObj(raw) || raw.app !== 'forge' || !isObj(raw.data)) throw new Error('That file is not a Forge backup.');
+  if (!isObj(raw) || raw.app !== 'forge' || !isObj(raw.data)) throw new Error(t('backup.notForge'));
   if (typeof raw.version !== 'number' || raw.version > SCHEMA_VERSION) {
-    throw new Error('This backup was made by a newer version of Forge.');
+    throw new Error(t('backup.newer'));
   }
   const d = raw.data;
   const arrays = ['workouts', 'routines', 'splits', 'bodyWeights', 'measurements', 'photos', 'customExercises'] as const;
   for (const k of arrays) {
-    if (d[k] !== undefined && !isArr(d[k])) throw new Error(`Backup is corrupted (${k}).`);
+    if (d[k] !== undefined && !isArr(d[k])) throw new Error(t('backup.corrupt', { key: k }));
   }
   const workouts = (d.workouts as unknown[] | undefined) ?? [];
   for (const w of workouts) {
     if (!isObj(w) || typeof w.id !== 'string' || typeof w.startedAt !== 'string' || !isArr(w.exercises)) {
-      throw new Error('Backup contains an invalid workout.');
+      throw new Error(t('backup.badWorkout'));
     }
   }
   return {

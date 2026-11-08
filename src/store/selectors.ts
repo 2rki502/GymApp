@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import { EXERCISES } from '@/data/exercises';
+import { localizeExercise } from '@/data/localize';
 import { toLocalDate, weekdayIndex } from '@/domain/dates';
 import { computePRs } from '@/domain/metrics';
 import type { Exercise, ID, Routine, Workout } from '@/domain/types';
+import { t } from '@/i18n';
 import { useData } from './useData';
 
 const LIBRARY = new Map(EXERCISES.map((e) => [e.id, e]));
@@ -23,9 +25,14 @@ export const UNKNOWN_EXERCISE: Exercise = {
 
 export type ExerciseLookup = (id: ID) => Exercise;
 
+/** Lookup across library + user-created exercises, in the current language. */
 export function makeLookup(custom: Exercise[]): ExerciseLookup {
   const customMap = new Map(custom.map((e) => [e.id, e]));
-  return (id) => LIBRARY.get(id) ?? customMap.get(id) ?? { ...UNKNOWN_EXERCISE, id };
+  return (id) => {
+    const lib = LIBRARY.get(id);
+    if (lib) return localizeExercise(lib);
+    return customMap.get(id) ?? { ...UNKNOWN_EXERCISE, id, name: t('common.deletedExercise') };
+  };
 }
 
 /** Stable lookup across library + user-created exercises. */
@@ -36,7 +43,7 @@ export function useExerciseLookup(): ExerciseLookup {
 
 export function useAllExercises(): Exercise[] {
   const custom = useData((s) => s.customExercises);
-  return useMemo(() => [...EXERCISES, ...custom], [custom]);
+  return useMemo(() => [...EXERCISES.map(localizeExercise), ...custom], [custom]);
 }
 
 /** PR events and all-time bests, recomputed only when history changes. */

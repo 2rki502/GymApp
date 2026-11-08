@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
-import { GROUP_LABEL, MUSCLE_LABEL } from '@/data/exercises';
+import { equipmentLabel, fmtReps, groupLabel, muscleLabel } from '@/data/localize';
 import { formatShortDate } from '@/domain/dates';
 import { exerciseHistory } from '@/domain/metrics';
 import { addExercises } from '@/domain/workoutOps';
 import { fmtWeight } from '@/domain/units';
 import type { Exercise } from '@/domain/types';
+import { t } from '@/i18n';
 import { goBack, navigate } from '@/lib/router';
 import { useExerciseLookup, usePRs } from '@/store/selectors';
 import { useData } from '@/store/useData';
@@ -30,10 +31,10 @@ export function ExerciseGuide({ ex, compact }: { ex: Exercise; compact?: boolean
       <div className="guide-hero">
         <ExerciseAnimation anim={ex.anim} className="guide-anim" />
         <div className="guide-tags">
-          <span className="badge">{GROUP_LABEL[ex.group]}</span>
+          <span className="badge">{groupLabel(ex.group)}</span>
           {ex.equipment.slice(0, 2).map((q) => (
             <span key={q} className="badge badge-muted">
-              {q}
+              {equipmentLabel(q)}
             </span>
           ))}
         </div>
@@ -41,48 +42,49 @@ export function ExerciseGuide({ ex, compact }: { ex: Exercise; compact?: boolean
 
       <div className="guide-facts">
         <div>
-          <label>Sets</label>
+          <label>{t('guide.sets')}</label>
           <span className="num">{ex.recommended.sets}</span>
         </div>
         <div>
-          <label>{ex.kind === 'time' ? 'Duration' : 'Reps'}</label>
-          <span className="num">{ex.recommended.reps}</span>
+          <label>{ex.kind === 'time' ? t('guide.duration') : t('guide.reps')}</label>
+          <span className="num">{fmtReps(ex.recommended.reps)}</span>
         </div>
         <div>
-          <label>Rest</label>
-          <span className="num">{ex.recommended.restSec}s</span>
+          <label>{t('guide.rest')}</label>
+          <span className="num">{t('time.seconds', { n: ex.recommended.restSec })}</span>
         </div>
       </div>
 
       <section className="guide-block">
-        <h3>Muscles worked</h3>
+        <h3>{t('guide.muscles')}</h3>
         <div className="muscle-tags">
           {ex.primary.map((m) => (
             <span key={m} className="muscle-tag is-primary">
-              {MUSCLE_LABEL(m)}
+              {muscleLabel(m)}
             </span>
           ))}
           {ex.secondary.map((m) => (
             <span key={m} className="muscle-tag">
-              {MUSCLE_LABEL(m)}
+              {muscleLabel(m)}
             </span>
           ))}
         </div>
         <p className="guide-legend">
-          <span className="dot" style={{ background: 'var(--accent-fg)' }} /> Primary <span className="dot" style={{ background: 'var(--surface-3)', marginLeft: 10 }} /> Secondary
+          <span className="dot" style={{ background: 'var(--accent-fg)' }} /> {t('guide.primary')}{' '}
+          <span className="dot" style={{ background: 'var(--surface-3)', marginInlineStart: 10 }} /> {t('guide.secondary')}
         </p>
       </section>
 
       {ex.equipment.length > 0 && (
         <section className="guide-block">
-          <h3>Equipment</h3>
-          <p className="muted">{ex.equipment.join(' · ')}</p>
+          <h3>{t('guide.equipment')}</h3>
+          <p className="muted">{ex.equipment.map(equipmentLabel).join(' · ')}</p>
         </section>
       )}
 
       {ex.instructions.length > 0 && (
         <section className="guide-block">
-          <h3>How to perform</h3>
+          <h3>{t('guide.how')}</h3>
           <ol className="steps">
             {ex.instructions.map((s, i) => (
               <li key={i}>
@@ -96,7 +98,7 @@ export function ExerciseGuide({ ex, compact }: { ex: Exercise; compact?: boolean
 
       {ex.mistakes.length > 0 && (
         <section className="guide-block">
-          <h3>Common mistakes</h3>
+          <h3>{t('guide.mistakes')}</h3>
           <ul className="mistakes">
             {ex.mistakes.map((m, i) => (
               <li key={i}>
@@ -110,23 +112,27 @@ export function ExerciseGuide({ ex, compact }: { ex: Exercise; compact?: boolean
 
       {!compact && (
         <section className="guide-block">
-          <h3>Your history</h3>
+          <h3>{t('guide.history')}</h3>
           {history.length === 0 ? (
-            <p className="muted">You haven't logged this exercise yet.</p>
+            <p className="muted">{t('guide.notYet')}</p>
           ) : (
             <button className="card card-tappable guide-history" onClick={() => navigate(`/progress/exercise/${ex.id}`)}>
               <div>
-                <label>Sessions</label>
+                <label>{t('stat.sessions')}</label>
                 <span className="num">{history.length}</span>
               </div>
               <div>
-                <label>Last</label>
+                <label>{t('guide.last')}</label>
                 <span className="num">{formatShortDate(last.date)}</span>
               </div>
               <div>
-                <label>{ex.kind === 'weight' ? 'Heaviest' : ex.kind === 'time' ? 'Longest' : 'Most reps'}</label>
+                <label>{ex.kind === 'weight' ? t('guide.heaviest') : ex.kind === 'time' ? t('guide.longest') : t('guide.mostReps')}</label>
                 <span className="num">
-                  {ex.kind === 'weight' ? fmtWeight(best?.weight ?? 0, units) : ex.kind === 'time' ? `${best?.duration ?? 0}s` : best?.reps ?? 0}
+                  {ex.kind === 'weight'
+                    ? fmtWeight(best?.weight ?? 0, units)
+                    : ex.kind === 'time'
+                      ? t('time.seconds', { n: best?.duration ?? 0 })
+                      : best?.reps ?? 0}
                 </span>
               </div>
               <Icon name="chevronRight" size={18} className="faint" />
@@ -151,21 +157,21 @@ export function ExerciseDetailScreen({ id }: { id: string }) {
       className="nav-btn is-strong"
       onClick={() => {
         updateSession((w) => addExercises(w, [ex.id], ex.recommended.restSec || defaultRest));
-        toast(`Added to ${session.name}`, 'success');
+        toast(t('guide.addedTo', { name: session.name }), 'success');
       }}
     >
-      Add
+      {t('common.add')}
     </button>
   ) : ex.custom ? (
     <button
       className="nav-btn"
-      aria-label="Delete exercise"
+      aria-label={t('guide.deleteAria')}
       onClick={async () => {
-        if (!(await confirm({ title: `Delete ${ex.name}?`, confirmLabel: 'Delete', destructive: true }))) return;
+        if (!(await confirm({ title: t('guide.deleteTitle', { name: ex.name }), confirmLabel: t('common.delete'), destructive: true }))) return;
         if (deleteCustom(ex.id)) {
-          toast('Exercise deleted');
+          toast(t('guide.deleted'));
           goBack('/library');
-        } else toast('It is used in your workouts or routines, so it can’t be deleted.', 'error');
+        } else toast(t('guide.inUse'), 'error');
       }}
     >
       <Icon name="trash" />
@@ -173,7 +179,7 @@ export function ExerciseDetailScreen({ id }: { id: string }) {
   ) : null;
 
   return (
-    <Screen title={ex.name} back={{ label: 'Library', to: '/library' }} right={right}>
+    <Screen title={ex.name} back={{ label: t('lib.title'), to: '/library' }} right={right}>
       <h1 className="guide-title">{ex.name}</h1>
       <ExerciseGuide ex={ex} />
     </Screen>
@@ -187,7 +193,17 @@ export function ExercisePeekSheet() {
   const lookup = useExerciseLookup();
   const ex = id ? lookup(id) : null;
   return (
-    <Sheet open={!!ex} onClose={() => set({ peekExercise: null })} title={ex?.name} full right={<button className="nav-btn is-strong" onClick={() => set({ peekExercise: null })}>Done</button>}>
+    <Sheet
+      open={!!ex}
+      onClose={() => set({ peekExercise: null })}
+      title={ex?.name}
+      full
+      right={
+        <button className="nav-btn is-strong" onClick={() => set({ peekExercise: null })}>
+          {t('common.done')}
+        </button>
+      }
+    >
       {ex && <ExerciseGuide ex={ex} compact />}
     </Sheet>
   );

@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { formatClock } from '@/domain/dates';
 import { uid } from '@/domain/id';
 import type { AccentColor, Routine, RoutineExercise } from '@/domain/types';
 import { ExercisePicker } from '@/features/exercises/ExercisePicker';
 import { ExerciseThumb } from '@/features/library/figure/Figure';
 import { startRoutine } from '@/features/session/actions';
+import { t } from '@/i18n';
 import { goBack } from '@/lib/router';
 import { useExerciseLookup } from '@/store/selectors';
 import { useData } from '@/store/useData';
@@ -11,7 +13,6 @@ import { EmptyState, Stepper } from '@/ui/controls';
 import { confirm, toast } from '@/ui/dialogs';
 import { Icon } from '@/ui/Icon';
 import { Screen } from '@/ui/Screen';
-import { formatClock } from '@/domain/dates';
 import './workouts.css';
 
 const COLORS: AccentColor[] = ['lime', 'blue', 'orange', 'pink', 'purple', 'teal'];
@@ -52,38 +53,46 @@ export function RoutineEditorScreen({ id }: { id: string }) {
 
   const valid = draft.name.trim().length > 0 && draft.exercises.length > 0;
   const onSave = () => {
-    if (!draft.name.trim()) return toast('Give your routine a name', 'error');
-    if (!draft.exercises.length) return toast('Add at least one exercise', 'error');
+    if (!draft.name.trim()) return toast(t('re.nameRequired'), 'error');
+    if (!draft.exercises.length) return toast(t('re.exerciseRequired'), 'error');
     save({ ...draft, name: draft.name.trim() });
-    toast(isNew ? 'Routine created' : 'Routine saved', 'success');
+    toast(isNew ? t('re.created') : t('re.saved'), 'success');
     goBack('/workouts');
   };
   const onCancel = async () => {
-    if (dirty && !(await confirm({ title: 'Discard changes?', confirmLabel: 'Discard', destructive: true }))) return;
+    if (dirty && !(await confirm({ title: t('common.discardChanges'), confirmLabel: t('common.discard'), destructive: true }))) return;
     goBack('/workouts');
   };
 
   return (
     <Screen
-      title={isNew ? 'New Routine' : 'Edit Routine'}
-      left={<button className="nav-btn" onClick={onCancel}>Cancel</button>}
-      right={<button className="nav-btn is-strong" onClick={onSave} disabled={!valid}>Save</button>}
+      title={isNew ? t('re.new') : t('re.edit')}
+      left={
+        <button className="nav-btn" onClick={onCancel}>
+          {t('common.cancel')}
+        </button>
+      }
+      right={
+        <button className="nav-btn is-strong" onClick={onSave} disabled={!valid}>
+          {t('common.save')}
+        </button>
+      }
     >
       <input
         className="routine-name-input"
-        placeholder="Routine name"
+        placeholder={t('re.namePlaceholder')}
         value={draft.name}
         onChange={(e) => patch({ name: e.target.value })}
         autoCapitalize="words"
-        aria-label="Routine name"
+        aria-label={t('re.namePlaceholder')}
       />
-      <div className="color-pick" role="radiogroup" aria-label="Colour">
+      <div className="color-pick" role="radiogroup" aria-label={t('re.colour')}>
         {COLORS.map((c) => (
           <button
             key={c}
             role="radio"
             aria-checked={draft.color === c}
-            aria-label={c}
+            aria-label={t(`color.${c}`)}
             className={`color-swatch color-${c} ${draft.color === c ? 'is-on' : ''}`}
             onClick={() => patch({ color: c })}
           />
@@ -91,7 +100,7 @@ export function RoutineEditorScreen({ id }: { id: string }) {
       </div>
 
       {draft.exercises.length === 0 ? (
-        <EmptyState icon="dumbbell" title="No exercises" text="Add exercises and set your target sets, reps and rest." />
+        <EmptyState icon="dumbbell" title={t('re.empty')} text={t('re.emptyText')} />
       ) : (
         <div className="re-list">
           {draft.exercises.map((e, i) => {
@@ -104,29 +113,37 @@ export function RoutineEditorScreen({ id }: { id: string }) {
                   </span>
                   <strong>{ex.name}</strong>
                   <div className="re-tools">
-                    <button className="icon-btn" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move up">
+                    <button className="icon-btn" disabled={i === 0} onClick={() => move(i, -1)} aria-label={t('editor.moveUp')}>
                       <Icon name="arrowUp" size={16} />
                     </button>
-                    <button className="icon-btn" disabled={i === draft.exercises.length - 1} onClick={() => move(i, 1)} aria-label="Move down">
+                    <button className="icon-btn" disabled={i === draft.exercises.length - 1} onClick={() => move(i, 1)} aria-label={t('editor.moveDown')}>
                       <Icon name="arrowDown" size={16} />
                     </button>
-                    <button className="icon-btn" onClick={() => patch({ exercises: draft.exercises.filter((x) => x.id !== e.id) })} aria-label="Remove">
+                    <button className="icon-btn" onClick={() => patch({ exercises: draft.exercises.filter((x) => x.id !== e.id) })} aria-label={t('re.remove')}>
                       <Icon name="trash" size={16} />
                     </button>
                   </div>
                 </div>
                 <div className="re-fields">
                   <label>
-                    <span>Sets</span>
-                    <Stepper label="sets" value={e.sets} min={1} max={12} onChange={(v) => patchEx(e.id, { sets: v })} />
+                    <span>{t('re.sets')}</span>
+                    <Stepper label={t('re.setsAria')} value={e.sets} min={1} max={12} onChange={(v) => patchEx(e.id, { sets: v })} />
                   </label>
                   <label>
-                    <span>{ex.kind === 'time' ? 'Time' : 'Reps'}</span>
-                    <input className="re-input" value={e.reps} onChange={(ev) => patchEx(e.id, { reps: ev.target.value.slice(0, 12) })} aria-label="Target reps" />
+                    <span>{ex.kind === 'time' ? t('re.time') : t('re.reps')}</span>
+                    <input className="re-input" value={e.reps} onChange={(ev) => patchEx(e.id, { reps: ev.target.value.slice(0, 16) })} aria-label={t('re.repsAria')} />
                   </label>
                   <label>
-                    <span>Rest</span>
-                    <Stepper label="rest" value={e.restSec} step={15} min={0} max={600} onChange={(v) => patchEx(e.id, { restSec: v })} format={(v) => (v ? formatClock(v) : 'Off')} />
+                    <span>{t('re.rest')}</span>
+                    <Stepper
+                      label={t('editor.restAria')}
+                      value={e.restSec}
+                      step={15}
+                      min={0}
+                      max={600}
+                      onChange={(v) => patchEx(e.id, { restSec: v })}
+                      format={(v) => (v ? formatClock(v) : t('common.off'))}
+                    />
                   </label>
                 </div>
               </div>
@@ -136,12 +153,12 @@ export function RoutineEditorScreen({ id }: { id: string }) {
       )}
 
       <button className="btn btn-block wo-add" style={{ marginTop: 14 }} onClick={() => setPicking(true)}>
-        <Icon name="plus" size={20} stroke={2.4} /> Add Exercises
+        <Icon name="plus" size={20} stroke={2.4} /> {t('re.addExercises')}
       </button>
 
       <label className="field">
-        <span>Notes</span>
-        <textarea className="input" value={draft.note ?? ''} placeholder="Focus, cues, progression plan…" onChange={(e) => patch({ note: e.target.value })} />
+        <span>{t('common.notes')}</span>
+        <textarea className="input" value={draft.note ?? ''} placeholder={t('re.notesPlaceholder')} onChange={(e) => patch({ note: e.target.value })} />
       </label>
 
       {!isNew && (
@@ -149,13 +166,13 @@ export function RoutineEditorScreen({ id }: { id: string }) {
           <button
             className="btn btn-danger"
             onClick={async () => {
-              if (await confirm({ title: `Delete “${draft.name}”?`, message: 'Your workout history is kept.', confirmLabel: 'Delete', destructive: true })) {
+              if (await confirm({ title: t('wk.deleteTitle', { name: draft.name }), message: t('wk.historyKept'), confirmLabel: t('common.delete'), destructive: true })) {
                 del(draft.id);
                 goBack('/workouts');
               }
             }}
           >
-            Delete
+            {t('common.delete')}
           </button>
           <button
             className="btn btn-primary"
@@ -165,7 +182,7 @@ export function RoutineEditorScreen({ id }: { id: string }) {
               startRoutine({ ...draft, name: draft.name.trim() });
             }}
           >
-            <Icon name="play" size={14} fill /> Start
+            <Icon name="play" size={14} fill /> {t('common.start')}
           </button>
         </div>
       )}

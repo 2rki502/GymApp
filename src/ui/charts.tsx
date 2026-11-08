@@ -6,6 +6,7 @@
  * - Sparkline, Ring: compact glanceable marks for cards.
  */
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { t } from '@/i18n';
 import { capture } from './controls';
 
 function useWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number] {
@@ -95,7 +96,7 @@ interface LineProps {
   ariaLabel: string;
 }
 
-export function LineChart({ data, height = 200, color = 'var(--chart)', formatY, formatX, goal, emptyText = 'Not enough data yet', ariaLabel }: LineProps) {
+export function LineChart({ data, height = 200, color = 'var(--chart)', formatY, formatX, goal, emptyText = t('common.notEnoughData'), ariaLabel }: LineProps) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
   const gid = useId().replace(/:/g, '');
@@ -140,6 +141,7 @@ export function LineChart({ data, height = 200, color = 'var(--chart)', formatY,
     <div
       ref={ref}
       className="chart"
+      dir="ltr"
       style={{ height }}
       role="img"
       aria-label={ariaLabel}
@@ -247,7 +249,7 @@ export function BarChart({
   const labelEvery = data.length > 8 ? Math.ceil(data.length / 6) : 1;
 
   return (
-    <div ref={ref} className="chart" style={{ height }} role="img" aria-label={ariaLabel} onPointerLeave={() => setHover(null)}>
+    <div ref={ref} className="chart" dir="ltr" style={{ height }} role="img" aria-label={ariaLabel} onPointerLeave={() => setHover(null)}>
       {width > 0 && (
         <svg width={width} height={height}>
           {ticks.map((t) => (

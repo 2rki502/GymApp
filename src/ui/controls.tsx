@@ -1,4 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react';
+import { isRTL, t } from '@/i18n';
 import { Icon, type IconName } from './Icon';
 
 export function Segmented<T extends string>({
@@ -129,11 +130,11 @@ export function Stepper({
 }) {
   return (
     <div className="stepper" role="group" aria-label={label}>
-      <button aria-label={`Decrease ${label}`} disabled={value <= min} onClick={() => onChange(Math.max(min, value - step))}>
+      <button aria-label={t('common.decrease', { label })} disabled={value <= min} onClick={() => onChange(Math.max(min, value - step))}>
         <Icon name="minus" size={18} stroke={2.4} />
       </button>
       <span className="num">{format(value)}</span>
-      <button aria-label={`Increase ${label}`} disabled={value >= max} onClick={() => onChange(Math.min(max, value + step))}>
+      <button aria-label={t('common.increase', { label })} disabled={value >= max} onClick={() => onChange(Math.min(max, value + step))}>
         <Icon name="plus" size={18} stroke={2.4} />
       </button>
     </div>
@@ -163,25 +164,27 @@ export function capture(e: React.PointerEvent) {
 }
 
 /**
- * Swipe left to reveal a destructive action (iOS list behaviour). Uses axis locking
- * so vertical scrolling is never hijacked.
+ * Swipe toward the start edge to reveal a destructive action (iOS list behaviour):
+ * left in LTR, right in RTL. Uses axis locking so vertical scrolling is never hijacked.
+ * `x` is a logical offset (negative = revealed) mapped to screen direction.
  */
-export function SwipeRow({ children, onDelete, label = 'Delete' }: { children: ReactNode; onDelete: () => void; label?: string }) {
+export function SwipeRow({ children, onDelete, label }: { children: ReactNode; onDelete: () => void; label?: string }) {
   const [x, setX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const g = useRef<{ x0: number; y0: number; base: number; axis: 'x' | 'y' | null } | null>(null);
   const OPEN = -84;
+  const dir = isRTL() ? -1 : 1;
 
   return (
     <div className="swipe">
       {(x !== 0 || dragging) && (
         <button className="swipe-action" onClick={onDelete}>
-          {label}
+          {label ?? t('common.delete')}
         </button>
       )}
       <div
         className="swipe-content"
-        style={{ transform: `translateX(${x}px)`, transition: dragging ? 'none' : undefined }}
+        style={{ transform: `translateX(${x * dir}px)`, transition: dragging ? 'none' : undefined }}
         onPointerDown={(e) => {
           if (e.pointerType === 'mouse' && e.button !== 0) return;
           g.current = { x0: e.clientX, y0: e.clientY, base: x, axis: null };
@@ -189,7 +192,7 @@ export function SwipeRow({ children, onDelete, label = 'Delete' }: { children: R
         onPointerMove={(e) => {
           const s = g.current;
           if (!s) return;
-          const dx = e.clientX - s.x0;
+          const dx = (e.clientX - s.x0) * dir;
           const dy = e.clientY - s.y0;
           if (!s.axis) {
             if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;

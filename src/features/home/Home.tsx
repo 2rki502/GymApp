@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react';
-import { addDays, formatDuration, formatShortDate, greeting, parseLocalDate, startOfDay, startOfWeek, toLocalDate, WEEKDAYS_LETTER } from '@/domain/dates';
+import { fmtReps } from '@/data/localize';
+import {
+  addDays, formatDuration, formatFullDate, formatShortDate, greeting, parseLocalDate, startOfDay, startOfWeek, toLocalDate, weekdayLetter,
+} from '@/domain/dates';
 import { workoutDurationSec, workoutSetCount } from '@/domain/metrics';
 import { activeDays, comparePeriod, weeklyBuckets, weeklyStreak } from '@/domain/stats';
 import { fmtNumber, toDisplayWeight, weightUnit } from '@/domain/units';
@@ -7,6 +10,8 @@ import { startEmptyWorkout, startRoutine } from '@/features/session/actions';
 import { prLabel } from '@/features/session/Session';
 import { formatPR } from '@/features/progress/ProgressScreen';
 import { WeightSheet } from '@/features/progress/BodyTab';
+import { ExerciseAnimation } from '@/features/library/figure/Figure';
+import { signed, t } from '@/i18n';
 import { navigate } from '@/lib/router';
 import { useExerciseLookup, usePRs, useTodayPlan } from '@/store/selectors';
 import { useData } from '@/store/useData';
@@ -14,10 +19,9 @@ import { useUI } from '@/store/useUI';
 import { BarChart, Ring, Sparkline } from '@/ui/charts';
 import { Icon } from '@/ui/Icon';
 import { Screen, SectionTitle } from '@/ui/Screen';
-import { ExerciseAnimation } from '@/features/library/figure/Figure';
 import './home.css';
 
-const LONG_DATE = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+const WEEK = [0, 1, 2, 3, 4, 5, 6];
 
 export function HomeScreen() {
   const settings = useData((s) => s.settings);
@@ -28,11 +32,11 @@ export function HomeScreen() {
 
   return (
     <Screen
-      title={name ? `${greeting()}, ${name}` : greeting()}
+      title={name ? t('greet.named', { greeting: greeting(), name }) : greeting()}
       large
-      eyebrow={LONG_DATE.format(new Date())}
+      eyebrow={formatFullDate(new Date())}
       right={
-        <button className="avatar" onClick={() => navigate('/profile')} aria-label="Profile">
+        <button className="avatar" onClick={() => navigate('/profile')} aria-label={t('tab.profile')}>
           {name ? name[0].toUpperCase() : <Icon name="user" size={18} />}
         </button>
       }
@@ -51,24 +55,23 @@ export function HomeScreen() {
   );
 }
 
+const goSplits = () => {
+  useUI.getState().set({ workoutsTab: 'splits' });
+  navigate('/workouts');
+};
+
 function Welcome() {
   return (
     <div className="welcome">
       <ExerciseAnimation anim="squat_back" className="welcome-art" />
-      <h2>Welcome to Forge</h2>
-      <p>Track every set, follow a split and watch your strength grow. Start by choosing a program.</p>
+      <h2>{t('home.welcomeTitle')}</h2>
+      <p>{t('home.welcomeText')}</p>
       <div className="btn-row">
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            useUI.getState().set({ workoutsTab: 'splits' });
-            navigate('/workouts');
-          }}
-        >
-          Pick a Program
+        <button className="btn btn-primary" onClick={goSplits}>
+          {t('home.pickProgram')}
         </button>
         <button className="btn" onClick={() => navigate('/library')}>
-          Browse Library
+          {t('home.browseLibrary')}
         </button>
       </div>
     </div>
@@ -81,16 +84,17 @@ function TodayCard() {
   const session = useData((s) => s.session);
 
   if (session) {
+    const done = session.exercises.reduce((n, e) => n + e.sets.filter((s) => s.done).length, 0);
     return (
       <button className="today today-live card-tappable" onClick={() => useUI.getState().set({ sessionOpen: true })}>
         <div className="eyebrow today-eyebrow">
-          <span className="mini-pulse" /> In progress
+          <span className="mini-pulse" /> {t('home.inProgress')}
         </div>
         <h2>{session.name}</h2>
         <p className="muted">
-          {session.exercises.length} exercises · {session.exercises.reduce((n, e) => n + e.sets.filter((s) => s.done).length, 0)} sets done
+          {t('n.exercises', { n: session.exercises.length })} · {t('home.setsDone', { n: done })}
         </p>
-        <span className="btn btn-primary today-btn">Resume Workout</span>
+        <span className="btn btn-primary today-btn">{t('home.resume')}</span>
       </button>
     );
   }
@@ -100,15 +104,15 @@ function TodayCard() {
     return (
       <button className="today today-done card-tappable" onClick={() => navigate(`/workouts/history/${w.id}`)}>
         <div className="eyebrow today-eyebrow">
-          <Icon name="check" size={14} stroke={3} /> Completed today
+          <Icon name="check" size={14} stroke={3} /> {t('home.completedToday')}
         </div>
         <h2>{w.name}</h2>
         <div className="today-stats">
           <span><Icon name="clock" size={15} /> {formatDuration(workoutDurationSec(w))}</span>
-          <span><Icon name="dumbbell" size={15} /> {w.exercises.length} exercise{w.exercises.length === 1 ? '' : 's'}</span>
-          <span><Icon name="layers" size={15} /> {workoutSetCount(w)} set{workoutSetCount(w) === 1 ? '' : 's'}</span>
+          <span><Icon name="dumbbell" size={15} /> {t('n.exercises', { n: w.exercises.length })}</span>
+          <span><Icon name="layers" size={15} /> {t('n.sets', { n: workoutSetCount(w) })}</span>
         </div>
-        <p className="muted today-note">Great work. Recovery is where the gains happen.</p>
+        <p className="muted today-note">{t('home.greatWork')}</p>
       </button>
     );
   }
@@ -116,34 +120,34 @@ function TodayCard() {
   if (plan.routine) {
     const r = plan.routine;
     const sets = r.exercises.reduce((n, e) => n + e.sets, 0);
-    const minutes = Math.round(r.exercises.reduce((t, e) => t + e.sets * (45 + e.restSec), 0) / 60);
+    const minutes = Math.round(r.exercises.reduce((sum, e) => sum + e.sets * (45 + e.restSec), 0) / 60);
     return (
       <div className={`today color-${r.color}`}>
         <span className="tpl-glow" />
-        <div className="eyebrow today-eyebrow">Today · {plan.splitName}</div>
+        <div className="eyebrow today-eyebrow">{t('home.todaySplit', { split: plan.splitName ?? '' })}</div>
         <h2>{r.name}</h2>
         <div className="today-stats">
-          <span><Icon name="layers" size={15} /> {r.exercises.length} exercises</span>
-          <span><Icon name="target" size={15} /> {sets} sets</span>
-          <span><Icon name="clock" size={15} /> ~{minutes} min</span>
+          <span><Icon name="layers" size={15} /> {t('n.exercises', { n: r.exercises.length })}</span>
+          <span><Icon name="target" size={15} /> {t('n.sets', { n: sets })}</span>
+          <span><Icon name="clock" size={15} /> {t('time.minutesApprox', { n: minutes })}</span>
         </div>
         <ul className="today-list">
           {r.exercises.slice(0, 4).map((e) => (
             <li key={e.id}>
               <span>{lookup(e.exerciseId).name}</span>
               <span className="faint num">
-                {e.sets} × {e.reps}
+                {e.sets} × {fmtReps(e.reps)}
               </span>
             </li>
           ))}
-          {r.exercises.length > 4 && <li className="faint">+{r.exercises.length - 4} more</li>}
+          {r.exercises.length > 4 && <li className="faint">{t('common.more', { n: r.exercises.length - 4 })}</li>}
         </ul>
         <div className="btn-row">
           <button className="btn" onClick={() => navigate(`/workouts/routine/${r.id}`)}>
-            Edit
+            {t('common.edit')}
           </button>
           <button className="btn btn-primary" onClick={() => startRoutine(r)}>
-            <Icon name="play" size={15} fill /> Start Workout
+            <Icon name="play" size={15} fill /> {t('home.startWorkout')}
           </button>
         </div>
       </div>
@@ -153,11 +157,11 @@ function TodayCard() {
   if (plan.isRestDay) {
     return (
       <div className="today today-rest">
-        <div className="eyebrow today-eyebrow">Today · {plan.splitName}</div>
-        <h2>Rest day</h2>
-        <p className="muted">Recover, stretch, walk. Feeling fresh? You can still train.</p>
+        <div className="eyebrow today-eyebrow">{t('home.todaySplit', { split: plan.splitName ?? '' })}</div>
+        <h2>{t('home.restDay')}</h2>
+        <p className="muted">{t('home.restText')}</p>
         <button className="btn today-btn" onClick={() => startEmptyWorkout()}>
-          Start an Extra Workout
+          {t('home.extraWorkout')}
         </button>
       </div>
     );
@@ -165,21 +169,15 @@ function TodayCard() {
 
   return (
     <div className="today">
-      <div className="eyebrow today-eyebrow">Today</div>
-      <h2>Ready to train?</h2>
-      <p className="muted">Set an active split to see your scheduled workout here each day.</p>
+      <div className="eyebrow today-eyebrow">{t('common.today')}</div>
+      <h2>{t('home.ready')}</h2>
+      <p className="muted">{t('home.readyText')}</p>
       <div className="btn-row" style={{ marginTop: 16 }}>
-        <button
-          className="btn"
-          onClick={() => {
-            useUI.getState().set({ workoutsTab: 'splits' });
-            navigate('/workouts');
-          }}
-        >
-          Plan Week
+        <button className="btn" onClick={goSplits}>
+          {t('home.planWeek')}
         </button>
         <button className="btn btn-primary" onClick={() => startEmptyWorkout()}>
-          <Icon name="plus" size={18} stroke={2.6} /> Quick Start
+          <Icon name="plus" size={18} stroke={2.6} /> {t('home.quickStart')}
         </button>
       </div>
     </div>
@@ -195,25 +193,31 @@ function WeekCard() {
   const count = useMemo(() => weeklyStreak(workouts, goal).thisWeek, [workouts, goal]);
 
   return (
-    <button className="card card-tappable week-card" onClick={() => { useUI.getState().set({ workoutsTab: 'history' }); navigate('/workouts'); }}>
+    <button
+      className="card card-tappable week-card"
+      onClick={() => {
+        useUI.getState().set({ workoutsTab: 'history' });
+        navigate('/workouts');
+      }}
+    >
       <div className="week-left">
-        <div className="eyebrow">This week</div>
+        <div className="eyebrow">{t('home.thisWeek')}</div>
         <div className="week-days">
-          {WEEKDAYS_LETTER.map((l, i) => {
+          {WEEK.map((i) => {
             const d = toLocalDate(addDays(week, i));
             const done = days.has(d);
             return (
               <div key={i} className={`wday ${done ? 'is-done' : ''} ${d === today ? 'is-today' : ''} ${d > today ? 'is-future' : ''}`}>
-                <span>{l}</span>
+                <span>{weekdayLetter(i)}</span>
                 <i>{done && <Icon name="check" size={12} stroke={3.4} />}</i>
               </div>
             );
           })}
         </div>
       </div>
-      <Ring value={count / goal} size={66} stroke={7} label={`${count} of ${goal} workouts this week`}>
+      <Ring value={count / goal} size={66} stroke={7} label={t('home.ringLabel', { n: count, goal })}>
         <strong className="num ring-num">{count}</strong>
-        <span className="ring-of">of {goal}</span>
+        <span className="ring-of">{t('home.ringOf', { goal })}</span>
       </Ring>
     </button>
   );
@@ -234,29 +238,38 @@ function BodyWeightTile() {
     return (
       <>
         <button className="stat home-tile card-tappable" onClick={() => setOpen(true)}>
-          <div className="stat-label"><Icon name="scale" size={15} /> Body weight</div>
+          <div className="stat-label">
+            <Icon name="scale" size={15} /> {t('home.bodyWeight')}
+          </div>
           <div className="tile-cta">
-            <Icon name="plus" size={18} stroke={2.6} /> Log weight
+            <Icon name="plus" size={18} stroke={2.6} /> {t('home.logWeight')}
           </div>
         </button>
         <WeightSheet open={open} onClose={() => setOpen(false)} />
       </>
     );
   }
+  const changeText = change !== null ? `${signed(change, (v) => fmtNumber(v, 1))} ${weightUnit(units)}` : '';
   return (
-    <>
-      <button className="stat home-tile card-tappable" onClick={() => { useUI.getState().set({ progressTab: 'body' }); navigate('/progress'); }}>
-        <div className="stat-label"><Icon name="scale" size={15} /> Body weight</div>
-        <div className="stat-value num">
-          {fmtNumber(toDisplayWeight(latest.weight, units), 1)}
-          <small>{weightUnit(units)}</small>
-        </div>
-        {recent.length > 1 && <Sparkline values={recent.map((b) => b.weight)} height={26} color="var(--blue)" />}
-        <div className="tile-foot">
-          {change !== null ? `${change > 0 ? '+' : change < 0 ? '−' : ''}${fmtNumber(Math.abs(change), 1)} ${weightUnit(units)} · 30 days` : `Logged ${formatShortDate(parseLocalDate(latest.date))}`}
-        </div>
-      </button>
-    </>
+    <button
+      className="stat home-tile card-tappable"
+      onClick={() => {
+        useUI.getState().set({ progressTab: 'body' });
+        navigate('/progress');
+      }}
+    >
+      <div className="stat-label">
+        <Icon name="scale" size={15} /> {t('home.bodyWeight')}
+      </div>
+      <div className="stat-value num">
+        {fmtNumber(toDisplayWeight(latest.weight, units), 1)}
+        <small>{weightUnit(units)}</small>
+      </div>
+      {recent.length > 1 && <Sparkline values={recent.map((b) => b.weight)} height={26} color="var(--blue)" />}
+      <div className="tile-foot">
+        {change !== null ? t('home.change30', { change: changeText }) : t('home.logged', { date: formatShortDate(parseLocalDate(latest.date)) })}
+      </div>
+    </button>
   );
 }
 
@@ -266,21 +279,34 @@ function StreakTile() {
   const s = useMemo(() => weeklyStreak(workouts, goal), [workouts, goal]);
   const total = workouts.filter((w) => w.endedAt).length;
   return (
-    <button className="stat home-tile card-tappable" onClick={() => { useUI.getState().set({ progressTab: 'overview' }); navigate('/progress'); }}>
-      <div className="stat-label"><Icon name="flame" size={15} style={{ color: 'var(--orange)' }} /> Streak</div>
+    <button
+      className="stat home-tile card-tappable"
+      onClick={() => {
+        useUI.getState().set({ progressTab: 'overview' });
+        navigate('/progress');
+      }}
+    >
+      <div className="stat-label">
+        <Icon name="flame" size={15} style={{ color: 'var(--orange)' }} /> {t('home.streak')}
+      </div>
       <div className="stat-value num">
         {s.weeks}
-        <small>{s.weeks === 1 ? 'week' : 'weeks'}</small>
+        <small>{t('unit.weeks', { n: s.weeks })}</small>
       </div>
       <div className="streak-bar" aria-hidden="true">
         {Array.from({ length: s.goal }, (_, i) => (
           <i key={i} className={i < s.thisWeek ? 'is-on' : ''} />
         ))}
       </div>
-      <div className="tile-foot">{total} workouts all time</div>
+      <div className="tile-foot">{t('home.allTime', { n: total })}</div>
     </button>
   );
 }
+
+const goOverview = () => {
+  useUI.getState().set({ progressTab: 'overview' });
+  navigate('/progress');
+};
 
 function RecentPRs() {
   const { events } = usePRs();
@@ -301,8 +327,14 @@ function RecentPRs() {
   if (!recent.length) return null;
   return (
     <>
-      <SectionTitle action={<button className="link" onClick={() => { useUI.getState().set({ progressTab: 'overview' }); navigate('/progress'); }}>See all</button>}>
-        Recent PRs
+      <SectionTitle
+        action={
+          <button className="link" onClick={goOverview}>
+            {t('home.seeAll')}
+          </button>
+        }
+      >
+        {t('home.recentPRs')}
       </SectionTitle>
       <div className="pr-scroller">
         {recent.map((p) => (
@@ -329,47 +361,53 @@ function ProgressSummary() {
 
   return (
     <>
-      <SectionTitle action={<button className="link" onClick={() => { useUI.getState().set({ progressTab: 'overview' }); navigate('/progress'); }}>Details</button>}>
-        This month
+      <SectionTitle
+        action={
+          <button className="link" onClick={goOverview}>
+            {t('home.details')}
+          </button>
+        }
+      >
+        {t('home.thisMonth')}
       </SectionTitle>
       <div className="card summary-card">
         <div className="summary-row">
           <div>
             <span className="num">{cmp.current.workouts}</span>
-            <label>Workouts</label>
+            <label>{t('stat.workouts')}</label>
           </div>
           <div>
             <span className="num">{cmp.current.sets}</span>
-            <label>Sets</label>
+            <label>{t('stat.sets')}</label>
           </div>
           <div>
             <span className="num">{formatDuration(cmp.current.durationSec)}</span>
-            <label>Trained</label>
+            <label>{t('stat.trained')}</label>
           </div>
         </div>
         {hasPrev && (
           <p className="summary-line">
             {diff === 0 ? (
-              'Same number of workouts as this point last month.'
+              t('home.sameAsLast')
             ) : (
               <>
                 <strong className={diff > 0 ? 'up' : 'down'}>
-                  {Math.abs(diff)} {diff > 0 ? 'more' : 'fewer'}
+                  {diff > 0 ? t('home.moreN', { n: diff }) : t('home.fewerN', { n: Math.abs(diff) })}
                 </strong>{' '}
-                workout{Math.abs(diff) === 1 ? '' : 's'} than this point last month.
+                {t('home.thanLastMonth')}
               </>
             )}
           </p>
         )}
         <BarChart
           data={weeks.map((w, i) => ({
-            label: i === weeks.length - 1 ? 'Now' : String(w.start.getDate()),
+            label: i === weeks.length - 1 ? t('common.now') : String(w.start.getDate()),
             value: w.workouts,
-            tip: `Week of ${formatShortDate(w.start)}`,
+            tip: t('common.weekOf', { date: formatShortDate(w.start) }),
             highlight: i === weeks.length - 1,
           }))}
           height={120}
-          ariaLabel="Workouts per week, last 8 weeks"
+          ariaLabel={t('home.chartAria')}
           formatY={(v) => fmtNumber(v, 0)}
         />
       </div>
@@ -381,19 +419,19 @@ function QuickStart() {
   const routines = useData((s) => s.routines);
   return (
     <>
-      <SectionTitle>Quick start</SectionTitle>
+      <SectionTitle>{t('home.quickStartTitle')}</SectionTitle>
       <div className="quick-grid">
         {routines.slice(0, 6).map((r) => (
           <button key={r.id} className={`quick color-${r.color}`} onClick={() => startRoutine(r)} disabled={!r.exercises.length}>
             <span className="quick-dot" />
             <strong>{r.name}</strong>
-            <span className="faint">{r.exercises.length} exercises</span>
+            <span className="faint">{t('n.exercises', { n: r.exercises.length })}</span>
             <Icon name="play" size={14} fill className="quick-play" />
           </button>
         ))}
         <button className="quick quick-empty" onClick={() => startEmptyWorkout()}>
           <Icon name="plus" size={18} stroke={2.6} />
-          <strong>Empty workout</strong>
+          <strong>{t('home.emptyWorkout')}</strong>
         </button>
       </div>
     </>

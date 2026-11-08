@@ -3,6 +3,7 @@ import { addDays, formatLongDate, formatShortDate, parseLocalDate, startOfDay, t
 import { uid } from '@/domain/id';
 import { fmtNumber, fromDisplayLength, fromDisplayWeight, lengthUnit, parseDecimal, toDisplayLength, toDisplayWeight, weightUnit } from '@/domain/units';
 import { MEASUREMENT_KEYS, type MeasurementEntry, type MeasurementKey } from '@/domain/types';
+import { signed, t } from '@/i18n';
 import { useData } from '@/store/useData';
 import { LineChart } from '@/ui/charts';
 import { Chips, EmptyState, Segmented, SwipeRow } from '@/ui/controls';
@@ -10,19 +11,7 @@ import { toast } from '@/ui/dialogs';
 import { Icon } from '@/ui/Icon';
 import { Sheet } from '@/ui/Sheet';
 
-export const MEASUREMENT_LABEL: Record<MeasurementKey, string> = {
-  chest: 'Chest',
-  waist: 'Waist',
-  hips: 'Hips',
-  shoulders: 'Shoulders',
-  neck: 'Neck',
-  leftArm: 'Left arm',
-  rightArm: 'Right arm',
-  leftThigh: 'Left thigh',
-  rightThigh: 'Right thigh',
-  calves: 'Calves',
-  bodyFat: 'Body fat',
-};
+export const measurementLabel = (k: MeasurementKey) => t(`m.${k}`);
 
 type Range = '1m' | '3m' | '6m' | '1y' | 'all';
 const RANGE_DAYS: Record<Range, number> = { '1m': 30, '3m': 91, '6m': 182, '1y': 365, all: Infinity };
@@ -55,21 +44,21 @@ export function BodyTab() {
 
   const metricKeys = MEASUREMENT_KEYS.filter((k) => measurements.some((m) => m.values[k] != null));
   const activeMetric = metricKeys.includes(metric) ? metric : metricKeys[0];
+  const disp = (k: MeasurementKey, n: number) => (k === 'bodyFat' ? n : toDisplayLength(n, units));
+  const unitFor = (k: MeasurementKey) => (k === 'bodyFat' ? '%' : lengthUnit(units));
   const mSeries = useMemo(
     () =>
       activeMetric
         ? [...measurements]
             .filter((m) => m.values[activeMetric] != null)
             .sort((a, b) => a.date.localeCompare(b.date))
-            .map((m) => ({
-              x: parseLocalDate(m.date).getTime(),
-              y: activeMetric === 'bodyFat' ? m.values[activeMetric]! : toDisplayLength(m.values[activeMetric]!, units),
-            }))
+            .map((m) => ({ x: parseLocalDate(m.date).getTime(), y: disp(activeMetric, m.values[activeMetric]!) }))
         : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [measurements, activeMetric, units],
   );
-  const mUnit = activeMetric === 'bodyFat' ? '%' : ` ${lengthUnit(units)}`;
   const latestM = measurements[0];
+  const goal = settings.goalWeight ? toDisplayWeight(settings.goalWeight, units) : null;
 
   return (
     <>
@@ -77,56 +66,55 @@ export function BodyTab() {
       <div className="card chart-card">
         <div className="chart-card-head">
           <div>
-            <div className="eyebrow">Body weight</div>
+            <div className="eyebrow">{t('body.weight')}</div>
             {latest ? (
               <div className="bw-headline">
                 <span className="num">{fmtNumber(toDisplayWeight(latest.weight, units), 1)}</span>
                 <small>{weightUnit(units)}</small>
                 {series.length > 1 && (
                   <span className={`delta ${change <= 0 ? 'up' : 'flat'}`}>
-                    {change > 0 ? '+' : change < 0 ? '−' : ''}
-                    {fmtNumber(Math.abs(change), 1)} {weightUnit(units)}
+                    {signed(change, (v) => fmtNumber(v, 1))} {weightUnit(units)}
                   </span>
                 )}
               </div>
             ) : (
-              <h3>No entries yet</h3>
+              <h3>{t('body.none')}</h3>
             )}
-            {latest && <span className="faint bw-date">Last logged {formatLongDate(latest.date).toLowerCase()}</span>}
+            {latest && <span className="faint bw-date">{t('body.lastLogged', { date: formatLongDate(latest.date) })}</span>}
           </div>
-          <button className="icon-btn is-accent" onClick={() => setLogWeight(true)} aria-label="Log body weight">
+          <button className="icon-btn is-accent" onClick={() => setLogWeight(true)} aria-label={t('body.logAria')}>
             <Icon name="plus" size={20} stroke={2.6} />
           </button>
         </div>
         <LineChart
           data={series}
           height={200}
-          ariaLabel="Body weight over time"
+          ariaLabel={t('body.chartAria')}
           formatY={(v) => fmtNumber(v, 1)}
           formatX={(x) => formatShortDate(new Date(x))}
-          goal={settings.goalWeight ? { y: toDisplayWeight(settings.goalWeight, units), label: `Goal ${fmtNumber(toDisplayWeight(settings.goalWeight, units), 1)}` } : undefined}
-          emptyText={bodyWeights.length ? 'No entries in this range' : 'Log your weight to see the trend'}
+          goal={goal !== null ? { y: goal, label: t('body.goal', { n: fmtNumber(goal, 1) }) } : undefined}
+          emptyText={bodyWeights.length ? t('body.noRange') : t('body.logToSee')}
         />
         <Segmented
           className="range-seg"
           value={range}
           onChange={setRange}
           options={[
-            { value: '1m', label: '1M' },
-            { value: '3m', label: '3M' },
-            { value: '6m', label: '6M' },
-            { value: '1y', label: '1Y' },
-            { value: 'all', label: 'All' },
+            { value: '1m', label: t('range.1m') },
+            { value: '3m', label: t('range.3m') },
+            { value: '6m', label: t('range.6m') },
+            { value: '1y', label: t('range.1y') },
+            { value: 'all', label: t('range.all') },
           ]}
         />
       </div>
 
       {bodyWeights.length > 0 && (
         <>
-          <h2 className="wk-section">Weight log</h2>
+          <h2 className="wk-section">{t('body.log')}</h2>
           <div className="group-body">
-            {(showAll ? bodyWeights : bodyWeights.slice(0, 5)).map((b, i, arr) => {
-              const prev = arr[i + 1] ?? bodyWeights[i + 1];
+            {(showAll ? bodyWeights : bodyWeights.slice(0, 5)).map((b, i) => {
+              const prev = bodyWeights[i + 1];
               const d = prev ? toDisplayWeight(b.weight - prev.weight, units) : 0;
               return (
                 <SwipeRow key={b.id} onDelete={() => deleteBodyWeight(b.id)}>
@@ -134,7 +122,9 @@ export function BodyTab() {
                     <span className="row-main">
                       <span className="row-label">{formatLongDate(b.date)}</span>
                     </span>
-                    {prev && Math.abs(d) >= 0.05 && <span className={`delta ${d < 0 ? 'up' : 'flat'}`}>{d > 0 ? '+' : '−'}{fmtNumber(Math.abs(d), 1)}</span>}
+                    {prev && Math.abs(d) >= 0.05 && (
+                      <span className={`delta ${d < 0 ? 'up' : 'flat'}`}>{signed(d, (v) => fmtNumber(v, 1))}</span>
+                    )}
                     <span className="row-value num">
                       {fmtNumber(toDisplayWeight(b.weight, units), 1)} {weightUnit(units)}
                     </span>
@@ -145,33 +135,42 @@ export function BodyTab() {
           </div>
           {bodyWeights.length > 5 && (
             <button className="link show-more" onClick={() => setShowAll((v) => !v)}>
-              {showAll ? 'Show less' : `Show all ${bodyWeights.length}`}
+              {showAll ? t('body.showLess') : t('body.showAll', { n: bodyWeights.length })}
             </button>
           )}
-          <p className="faint swipe-hint">Swipe left on an entry to delete it.</p>
+          <p className="faint swipe-hint">{t('body.swipeHint')}</p>
         </>
       )}
 
       {/* ── Measurements ── */}
       <div className="section-title">
-        <h2>Measurements</h2>
+        <h2>{t('body.measurements')}</h2>
         <button className="link" onClick={() => setMeasureSheet('new')}>
-          Add
+          {t('common.add')}
         </button>
       </div>
       {measurements.length === 0 ? (
         <div className="card">
-          <EmptyState icon="ruler" title="Track your measurements" text="Arms, chest, waist, thighs and body fat — see how your body changes beyond the scale." action={<button className="btn btn-primary" onClick={() => setMeasureSheet('new')}>Add Measurements</button>} />
+          <EmptyState
+            icon="ruler"
+            title={t('body.trackTitle')}
+            text={t('body.trackText')}
+            action={
+              <button className="btn btn-primary" onClick={() => setMeasureSheet('new')}>
+                {t('body.addMeasurements')}
+              </button>
+            }
+          />
         </div>
       ) : (
         <>
-          <Chips value={activeMetric} onChange={setMetric} options={metricKeys.map((k) => ({ value: k, label: MEASUREMENT_LABEL[k] }))} />
+          <Chips value={activeMetric} onChange={setMetric} options={metricKeys.map((k) => ({ value: k, label: measurementLabel(k) }))} />
           <div className="card chart-card" style={{ marginTop: 12 }}>
             <LineChart
               data={mSeries}
               height={170}
               color="var(--blue)"
-              ariaLabel={`${MEASUREMENT_LABEL[activeMetric]} over time`}
+              ariaLabel={t('body.overTime', { name: measurementLabel(activeMetric) })}
               formatY={(v) => `${fmtNumber(v, 1)}${activeMetric === 'bodyFat' ? '%' : ''}`}
               formatX={(x) => formatShortDate(new Date(x))}
             />
@@ -182,27 +181,23 @@ export function BodyTab() {
                 const v = latestM.values[k]!;
                 const prevEntry = measurements.find((m) => m.id !== latestM.id && m.values[k] != null);
                 const pv = prevEntry?.values[k];
-                const disp = (n: number) => (k === 'bodyFat' ? n : toDisplayLength(n, units));
-                const diff = pv != null ? disp(v) - disp(pv) : 0;
+                const diff = pv != null ? disp(k, v) - disp(k, pv) : 0;
                 return (
                   <button key={k} className={`measure ${k === activeMetric ? 'is-active' : ''}`} onClick={() => setMetric(k)}>
-                    <span>{MEASUREMENT_LABEL[k]}</span>
+                    <span>{measurementLabel(k)}</span>
                     <strong className="num">
-                      {fmtNumber(disp(v), 1)}
-                      <small>{k === 'bodyFat' ? '%' : lengthUnit(units)}</small>
+                      {fmtNumber(disp(k, v), 1)}
+                      <small>{unitFor(k)}</small>
                     </strong>
                     {pv != null && Math.abs(diff) >= 0.05 && (
-                      <em className="num">
-                        {diff > 0 ? '+' : '−'}
-                        {fmtNumber(Math.abs(diff), 1)}
-                      </em>
+                      <em className="num">{signed(diff, (v) => fmtNumber(v, 1))}</em>
                     )}
                   </button>
                 );
               })}
             </div>
           )}
-          <h2 className="wk-section">History</h2>
+          <h2 className="wk-section">{t('body.history')}</h2>
           <div className="group-body">
             {measurements.map((m) => (
               <SwipeRow key={m.id} onDelete={() => deleteMeasurement(m.id)}>
@@ -210,8 +205,9 @@ export function BodyTab() {
                   <span className="row-main">
                     <span className="row-label">{formatLongDate(m.date)}</span>
                     <span className="row-detail">
-                      {Object.keys(m.values).length} measurements
-                      {m.values[activeMetric] != null && ` · ${MEASUREMENT_LABEL[activeMetric]} ${fmtNumber(activeMetric === 'bodyFat' ? m.values[activeMetric]! : toDisplayLength(m.values[activeMetric]!, units), 1)}${mUnit}`}
+                      {t('n.measurements', { n: Object.keys(m.values).length })}
+                      {m.values[activeMetric] != null &&
+                        ` · ${measurementLabel(activeMetric)} ${fmtNumber(disp(activeMetric, m.values[activeMetric]!), 1)} ${unitFor(activeMetric)}`}
                     </span>
                   </span>
                   <Icon name="chevronRight" size={16} stroke={2.4} className="row-chevron" />
@@ -237,10 +233,10 @@ export function WeightSheet({ open, onClose }: { open: boolean; onClose: () => v
 
   const save = () => {
     const v = parseDecimal(text);
-    if (v === null || v < 20 || v > 700) return toast('Enter a valid weight', 'error');
-    if (date > toLocalDate()) return toast('Date can’t be in the future', 'error');
+    if (v === null || v < 20 || v > 700) return toast(t('body.invalidWeight'), 'error');
+    if (date > toLocalDate()) return toast(t('body.futureDate'), 'error');
     logBodyWeight(date, fromDisplayWeight(v, units));
-    toast('Weight logged', 'success');
+    toast(t('body.logged'), 'success');
     setText('');
     onClose();
   };
@@ -249,9 +245,17 @@ export function WeightSheet({ open, onClose }: { open: boolean; onClose: () => v
     <Sheet
       open={open}
       onClose={onClose}
-      title="Log Weight"
-      left={<button className="nav-btn" onClick={onClose}>Cancel</button>}
-      right={<button className="nav-btn is-strong" onClick={save}>Save</button>}
+      title={t('body.logTitle')}
+      left={
+        <button className="nav-btn" onClick={onClose}>
+          {t('common.cancel')}
+        </button>
+      }
+      right={
+        <button className="nav-btn is-strong" onClick={save}>
+          {t('common.save')}
+        </button>
+      }
     >
       <div className="big-input">
         <input
@@ -261,16 +265,21 @@ export function WeightSheet({ open, onClose }: { open: boolean; onClose: () => v
           value={text}
           onChange={(e) => setText(e.target.value.replace(/[^\d.,]/g, ''))}
           onKeyDown={(e) => e.key === 'Enter' && save()}
-          aria-label={`Weight in ${weightUnit(units)}`}
+          aria-label={t('body.weightAria', { unit: weightUnit(units) })}
           className="num"
+          dir="ltr"
         />
         <span>{weightUnit(units)}</span>
       </div>
       <label className="field">
-        <span>Date</span>
+        <span>{t('common.date')}</span>
         <input className="input" type="date" value={date} max={toLocalDate()} onChange={(e) => setDate(e.target.value)} />
       </label>
-      {bodyWeights.some((b) => b.date === date) && <p className="faint" style={{ marginTop: 8, fontSize: 14 }}>This replaces the entry already logged for that day.</p>}
+      {bodyWeights.some((b) => b.date === date) && (
+        <p className="faint" style={{ marginTop: 8, fontSize: 14 }}>
+          {t('body.replaces')}
+        </p>
+      )}
     </Sheet>
   );
 }
@@ -305,15 +314,15 @@ function MeasurementSheet({ entry, onClose }: { entry: MeasurementEntry | 'new' 
   const save = () => {
     const values: MeasurementEntry['values'] = {};
     for (const k of MEASUREMENT_KEYS) {
-      const t = vals[k];
-      if (!t) continue;
-      const n = parseDecimal(t);
-      if (n === null || n <= 0 || (k === 'bodyFat' ? n > 70 : n > 400)) return toast(`Check the value for ${MEASUREMENT_LABEL[k]}`, 'error');
+      const raw = vals[k];
+      if (!raw) continue;
+      const n = parseDecimal(raw);
+      if (n === null || n <= 0 || (k === 'bodyFat' ? n > 70 : n > 400)) return toast(t('body.checkValue', { name: measurementLabel(k) }), 'error');
       values[k] = k === 'bodyFat' ? n : fromDisplayLength(n, units);
     }
-    if (!Object.keys(values).length) return toast('Enter at least one measurement', 'error');
+    if (!Object.keys(values).length) return toast(t('body.enterOne'), 'error');
     saveMeasurement({ id: editing?.id ?? uid(), date, values });
-    toast('Measurements saved', 'success');
+    toast(t('body.saved'), 'success');
     onClose();
   };
 
@@ -322,12 +331,20 @@ function MeasurementSheet({ entry, onClose }: { entry: MeasurementEntry | 'new' 
       open={entry !== null}
       onClose={onClose}
       full
-      title={editing ? 'Edit Measurements' : 'New Measurements'}
-      left={<button className="nav-btn" onClick={onClose}>Cancel</button>}
-      right={<button className="nav-btn is-strong" onClick={save}>Save</button>}
+      title={editing ? t('body.editTitle') : t('body.newTitle')}
+      left={
+        <button className="nav-btn" onClick={onClose}>
+          {t('common.cancel')}
+        </button>
+      }
+      right={
+        <button className="nav-btn is-strong" onClick={save}>
+          {t('common.save')}
+        </button>
+      }
     >
       <label className="field">
-        <span>Date</span>
+        <span>{t('common.date')}</span>
         <input className="input" type="date" value={date} max={toLocalDate()} onChange={(e) => setDate(e.target.value)} />
       </label>
       <div className="group-body" style={{ marginTop: 16 }}>
@@ -337,7 +354,7 @@ function MeasurementSheet({ entry, onClose }: { entry: MeasurementEntry | 'new' 
           return (
             <label key={k} className="row">
               <span className="row-main">
-                <span className="row-label">{MEASUREMENT_LABEL[k]}</span>
+                <span className="row-label">{measurementLabel(k)}</span>
               </span>
               <input
                 className="row-input num"
@@ -345,14 +362,17 @@ function MeasurementSheet({ entry, onClose }: { entry: MeasurementEntry | 'new' 
                 placeholder={ph}
                 value={vals[k] ?? ''}
                 onChange={(e) => setVals({ ...vals, [k]: e.target.value.replace(/[^\d.,]/g, '') })}
-                aria-label={MEASUREMENT_LABEL[k]}
+                aria-label={measurementLabel(k)}
+                dir="ltr"
               />
               <span className="faint unit-suffix">{k === 'bodyFat' ? '%' : lengthUnit(units)}</span>
             </label>
           );
         })}
       </div>
-      <p className="faint" style={{ fontSize: 13, marginTop: 10 }}>Placeholders show your previous values. Leave blank to skip.</p>
+      <p className="faint" style={{ fontSize: 13, marginTop: 10 }}>
+        {t('body.placeholderHint')}
+      </p>
       {editing && (
         <button
           className="btn btn-danger btn-block"
@@ -362,7 +382,7 @@ function MeasurementSheet({ entry, onClose }: { entry: MeasurementEntry | 'new' 
             onClose();
           }}
         >
-          Delete Entry
+          {t('body.deleteEntry')}
         </button>
       )}
     </Sheet>

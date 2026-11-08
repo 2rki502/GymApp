@@ -4,6 +4,7 @@ import { App } from './App';
 import { requestPersistence } from './store/storage';
 import './styles/global.css';
 import './styles/ui.css';
+import './styles/rtl.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

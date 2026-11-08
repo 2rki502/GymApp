@@ -6,9 +6,10 @@ import {
   addExercises, addSet, canComplete, cycleSetType, fillFromHint, moveExercise, removeExercise, removeSet,
   replaceExercise, setRest, updateSet,
 } from '@/domain/workoutOps';
-import type { Exercise, ExerciseLog, ID, SetLog, UnitSystem, Workout } from '@/domain/types';
+import type { Exercise, ExerciseLog, ID, SetLog, SetType, UnitSystem, Workout } from '@/domain/types';
 import { ExercisePicker } from '@/features/exercises/ExercisePicker';
 import { ExerciseThumb } from '@/features/library/figure/Figure';
+import { t, type Key } from '@/i18n';
 import { unlockAudio, vibrate } from '@/lib/feedback';
 import { useExerciseLookup } from '@/store/selectors';
 import { useData } from '@/store/useData';
@@ -49,12 +50,14 @@ export function WorkoutEditor({ workout, onChange, mode, bests }: Props) {
     actionSheet({
       title: ex.name,
       actions: [
-        ...(ex.instructions.length ? [{ label: 'How to perform', onSelect: () => useUI.getState().set({ peekExercise: ex.id }) }] : []),
-        { label: 'Replace exercise', onSelect: () => setPicker({ replace: log.id }) },
-        ...(mode === 'live' ? [{ label: `Rest timer · ${log.restSec ? formatClock(log.restSec) : 'Off'}`, onSelect: () => setRestFor(log) }] : []),
-        ...(index > 0 ? [{ label: 'Move up', onSelect: () => onChange((w) => moveExercise(w, log.id, -1)) }] : []),
-        ...(index < workout.exercises.length - 1 ? [{ label: 'Move down', onSelect: () => onChange((w) => moveExercise(w, log.id, 1)) }] : []),
-        { label: 'Remove exercise', destructive: true, onSelect: () => onChange((w) => removeExercise(w, log.id)) },
+        ...(ex.instructions.length ? [{ label: t('editor.howTo'), onSelect: () => useUI.getState().set({ peekExercise: ex.id }) }] : []),
+        { label: t('editor.replace'), onSelect: () => setPicker({ replace: log.id }) },
+        ...(mode === 'live'
+          ? [{ label: t('editor.restTimer', { time: log.restSec ? formatClock(log.restSec) : t('common.off') }), onSelect: () => setRestFor(log) }]
+          : []),
+        ...(index > 0 ? [{ label: t('editor.moveUp'), onSelect: () => onChange((w) => moveExercise(w, log.id, -1)) }] : []),
+        ...(index < workout.exercises.length - 1 ? [{ label: t('editor.moveDown'), onSelect: () => onChange((w) => moveExercise(w, log.id, 1)) }] : []),
+        { label: t('editor.remove'), destructive: true, onSelect: () => onChange((w) => removeExercise(w, log.id)) },
       ],
     });
   };
@@ -80,13 +83,13 @@ export function WorkoutEditor({ workout, onChange, mode, bests }: Props) {
       })}
 
       <button className="btn btn-block wo-add" onClick={() => setPicker({})}>
-        <Icon name="plus" size={20} stroke={2.4} /> Add Exercise
+        <Icon name="plus" size={20} stroke={2.4} /> {t('editor.addExercise')}
       </button>
 
       <ExercisePicker
         open={!!picker}
         multi={!picker?.replace}
-        title={picker?.replace ? 'Replace Exercise' : 'Add Exercises'}
+        title={picker?.replace ? t('editor.replaceTitle') : t('editor.addTitle')}
         onClose={() => setPicker(null)}
         onPick={(ids) => {
           if (picker?.replace) onChange((w) => replaceExercise(w, picker.replace!, ids[0]));
@@ -103,7 +106,12 @@ export function WorkoutEditor({ workout, onChange, mode, bests }: Props) {
         }}
       />
 
-      <Sheet open={!!restFor} onClose={() => setRestFor(null)} title="Rest Timer" right={<button className="nav-btn is-strong" onClick={() => setRestFor(null)}>Done</button>}>
+      <Sheet
+        open={!!restFor}
+        onClose={() => setRestFor(null)}
+        title={t('editor.restTitle')}
+        right={<button className="nav-btn is-strong" onClick={() => setRestFor(null)}>{t('common.done')}</button>}
+      >
         {restFor && (
           <RestPicker
             value={workout.exercises.find((e) => e.id === restFor.id)?.restSec ?? restFor.restSec}
@@ -119,14 +127,14 @@ function RestPicker({ value, onChange }: { value: number; onChange: (v: number) 
   const presets = [0, 30, 60, 90, 120, 150, 180, 240];
   return (
     <div className="rest-picker">
-      <p className="muted">Starts automatically when you complete a set of this exercise.</p>
+      <p className="muted">{t('editor.restHelp')}</p>
       <div className="rest-picker-main">
-        <Stepper label="rest" value={value} step={15} min={0} max={600} onChange={onChange} format={(v) => (v ? formatClock(v) : 'Off')} />
+        <Stepper label={t('editor.restAria')} value={value} step={15} min={0} max={600} onChange={onChange} format={(v) => (v ? formatClock(v) : t('common.off'))} />
       </div>
       <div className="rest-presets">
         {presets.map((p) => (
           <button key={p} className={`chip ${p === value ? 'is-active' : ''}`} onClick={() => onChange(p)}>
-            {p ? formatClock(p) : 'Off'}
+            {p ? formatClock(p) : t('common.off')}
           </button>
         ))}
       </div>
@@ -134,7 +142,8 @@ function RestPicker({ value, onChange }: { value: number; onChange: (v: number) 
   );
 }
 
-const TYPE_LABEL: Record<SetLog['type'], string> = { normal: '', warmup: 'W', drop: 'D', failure: 'F' };
+const TYPE_LETTER: Record<SetType, Key | null> = { normal: null, warmup: 'set.warmup', drop: 'set.drop', failure: 'set.failure' };
+const TYPE_NAME: Record<SetType, Key> = { normal: 'setType.normal', warmup: 'setType.warmup', drop: 'setType.drop', failure: 'setType.failure' };
 
 const ExerciseBlock = memo(function ExerciseBlock({
   log,
@@ -170,7 +179,7 @@ const ExerciseBlock = memo(function ExerciseBlock({
       setShake(s.id);
       vibrate(30);
       setTimeout(() => setShake(null), 400);
-      toast(kind === 'time' ? 'Enter a duration first' : kind === 'reps' ? 'Enter your reps first' : 'Enter weight and reps first', 'error');
+      toast(kind === 'time' ? t('editor.needDuration') : kind === 'reps' ? t('editor.needReps') : t('editor.needWeightReps'), 'error');
       return;
     }
     vibrate(10);
@@ -191,8 +200,8 @@ const ExerciseBlock = memo(function ExerciseBlock({
 
   const hintText = (h?: SetLog) => {
     if (!h) return '—';
-    if (kind === 'time') return `${h.duration ?? 0}s`;
-    if (kind === 'reps') return `${h.reps ?? 0} reps`;
+    if (kind === 'time') return t('time.seconds', { n: h.duration ?? 0 });
+    if (kind === 'reps') return t('n.reps', { n: h.reps ?? 0 });
     return `${Math.round(toDisplayWeight(h.weight ?? 0, units) * 10) / 10} × ${h.reps ?? 0}`;
   };
 
@@ -206,7 +215,7 @@ const ExerciseBlock = memo(function ExerciseBlock({
           <span className="ex-title">
             <span className="ex-name">{ex.name}</span>
             <span className="ex-meta">
-              {mode === 'live' ? `${doneCount}/${log.sets.length} sets` : `${log.sets.length} set${log.sets.length === 1 ? '' : 's'}`}
+              {mode === 'live' ? t('editor.setsProgress', { done: doneCount, total: log.sets.length }) : t('n.sets', { n: log.sets.length })}
               {mode === 'live' && log.restSec > 0 && (
                 <>
                   {' · '}
@@ -216,39 +225,44 @@ const ExerciseBlock = memo(function ExerciseBlock({
             </span>
           </span>
         </button>
-        <button className="icon-btn" onClick={onMenu} aria-label={`${ex.name} options`}>
+        <button className="icon-btn" onClick={onMenu} aria-label={t('editor.options', { name: ex.name })}>
           <Icon name="more" size={22} stroke={3} />
         </button>
       </header>
 
       <div className={`set-grid set-grid-${kind} ${mode === 'edit' ? 'is-edit' : ''}`}>
         <div className="set-hdr">
-          <span>Set</span>
-          <span>Previous</span>
+          <span>{t('editor.colSet')}</span>
+          <span>{t('editor.colPrev')}</span>
           {kind === 'weight' && <span>{weightUnit(units)}</span>}
-          {kind !== 'time' && <span>Reps</span>}
-          {kind === 'time' && <span>Secs</span>}
+          {kind !== 'time' && <span>{t('editor.colReps')}</span>}
+          {kind === 'time' && <span>{t('editor.colSecs')}</span>}
           {mode === 'live' && <span className="set-hdr-check"><Icon name="check" size={14} stroke={3} /></span>}
         </div>
         {log.sets.map((s, idx) => {
           const hint = hints[idx] ?? hints[hints.length - 1];
-          const label = TYPE_LABEL[s.type] || String(++normalIdx);
+          const letter = TYPE_LETTER[s.type];
+          const label = letter ? t(letter) : String(++normalIdx);
           const pr = isPR(s);
           return (
             <SwipeRow key={s.id} onDelete={() => onChange((w) => removeSet(w, log.id, s.id))}>
               <div className={`set-row ${s.done && mode === 'live' ? 'is-done' : ''} ${shake === s.id ? 'is-shake' : ''}`}>
-                <button className={`set-type set-type-${s.type}`} onClick={() => onChange((w) => cycleSetType(w, log.id, s.id))} aria-label={`Set ${label}, type ${s.type}. Tap to change`}>
+                <button
+                  className={`set-type set-type-${s.type}`}
+                  onClick={() => onChange((w) => cycleSetType(w, log.id, s.id))}
+                  aria-label={t('editor.typeAria', { label, type: t(TYPE_NAME[s.type]) })}
+                >
                   {label}
                 </button>
                 <button
                   className="set-prev"
                   disabled={!hint}
                   onClick={() => hint && onChange((w) => updateSet(w, log.id, s.id, { weight: hint.weight, reps: hint.reps, duration: hint.duration }))}
-                  aria-label="Use previous values"
+                  aria-label={t('editor.usePrev')}
                 >
                   {pr ? (
                     <span className="badge badge-gold">
-                      <Icon name="trophy" size={12} stroke={2.4} /> PR
+                      <Icon name="trophy" size={12} stroke={2.4} /> {t('pr.short')}
                     </span>
                   ) : (
                     hintText(hint)
@@ -257,7 +271,7 @@ const ExerciseBlock = memo(function ExerciseBlock({
                 {kind === 'weight' && (
                   <NumInput
                     className="set-input num"
-                    ariaLabel={`Set ${label} weight`}
+                    ariaLabel={t('editor.weightAria', { label })}
                     value={s.weight === null ? null : toDisplayWeight(s.weight, units)}
                     placeholder={hint?.weight != null ? String(Math.round(toDisplayWeight(hint.weight, units) * 10) / 10) : '0'}
                     onCommit={(v) => onChange((w) => updateSet(w, log.id, s.id, { weight: v === null ? null : fromDisplayWeight(v, units) }))}
@@ -268,7 +282,7 @@ const ExerciseBlock = memo(function ExerciseBlock({
                   <NumInput
                     className="set-input num"
                     integer
-                    ariaLabel={`Set ${label} reps`}
+                    ariaLabel={t('editor.repsAria', { label })}
                     value={s.reps}
                     placeholder={hint?.reps != null ? String(hint.reps) : '0'}
                     onCommit={(v) => onChange((w) => updateSet(w, log.id, s.id, { reps: v }))}
@@ -279,7 +293,7 @@ const ExerciseBlock = memo(function ExerciseBlock({
                   <NumInput
                     className="set-input num"
                     integer
-                    ariaLabel={`Set ${label} seconds`}
+                    ariaLabel={t('editor.secsAria', { label })}
                     value={s.duration}
                     placeholder={hint?.duration != null ? String(hint.duration) : '0'}
                     onCommit={(v) => onChange((w) => updateSet(w, log.id, s.id, { duration: v }))}
@@ -287,7 +301,12 @@ const ExerciseBlock = memo(function ExerciseBlock({
                   />
                 )}
                 {mode === 'live' && (
-                  <button className={`set-check ${s.done ? 'is-on' : ''}`} onClick={() => toggleDone(s, hint)} aria-label={s.done ? 'Mark set not done' : 'Complete set'} aria-pressed={s.done}>
+                  <button
+                    className={`set-check ${s.done ? 'is-on' : ''}`}
+                    onClick={() => toggleDone(s, hint)}
+                    aria-label={s.done ? t('editor.uncheck') : t('editor.check')}
+                    aria-pressed={s.done}
+                  >
                     <Icon name="check" size={18} stroke={3} />
                   </button>
                 )}
@@ -297,7 +316,7 @@ const ExerciseBlock = memo(function ExerciseBlock({
         })}
       </div>
       <button className="ex-add-set" onClick={() => onChange((w) => addSet(w, log.id, mode === 'edit'))}>
-        <Icon name="plus" size={16} stroke={2.6} /> Add Set
+        <Icon name="plus" size={16} stroke={2.6} /> {t('editor.addSet')}
       </button>
     </section>
   );

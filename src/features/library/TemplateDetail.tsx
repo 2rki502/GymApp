@@ -1,4 +1,7 @@
+import { fmtReps, levelLabel, localizeTemplate } from '@/data/localize';
 import { HOME_ROUTINES } from '@/data/templates';
+import { startTemplate } from '@/features/session/actions';
+import { t } from '@/i18n';
 import { navigate } from '@/lib/router';
 import { useExerciseLookup } from '@/store/selectors';
 import { useData } from '@/store/useData';
@@ -7,35 +10,42 @@ import { EmptyState } from '@/ui/controls';
 import { toast } from '@/ui/dialogs';
 import { Icon } from '@/ui/Icon';
 import { Screen } from '@/ui/Screen';
-import { startTemplate } from '@/features/session/actions';
 import { ExerciseThumb } from './figure/Figure';
 import './library.css';
 
 export function TemplateDetailScreen({ id }: { id: string }) {
-  const t = HOME_ROUTINES.find((x) => x.id === id);
+  const raw = HOME_ROUTINES.find((x) => x.id === id);
   const lookup = useExerciseLookup();
   const fromTemplate = useData((s) => s.routineFromTemplate);
+  const back = { label: t('lib.title'), to: '/library' };
 
-  if (!t) {
+  if (!raw) {
     return (
-      <Screen title="Routine" back={{ label: 'Library', to: '/library' }}>
-        <EmptyState icon="info" title="Routine not found" />
+      <Screen title={t('tpl.title')} back={back}>
+        <EmptyState icon="info" title={t('tpl.notFound')} />
       </Screen>
     );
   }
-  const totalSets = t.exercises.reduce((n, e) => n + e.sets, 0);
+  const tpl = localizeTemplate(raw);
+  const totalSets = tpl.exercises.reduce((n, e) => n + e.sets, 0);
 
   return (
-    <Screen title={t.name} back={{ label: 'Library', to: '/library' }}>
-      <div className={`tpl-hero color-${t.color}`}>
+    <Screen title={tpl.name} back={back}>
+      <div className={`tpl-hero color-${tpl.color}`}>
         <span className="tpl-glow" />
-        <span className="badge">{t.level}</span>
-        <h1>{t.name}</h1>
-        <p>{t.description}</p>
+        <span className="badge">{levelLabel(tpl.level)}</span>
+        <h1>{tpl.name}</h1>
+        <p>{tpl.description}</p>
         <div className="tpl-hero-stats">
-          <span><Icon name="clock" size={15} /> ~{t.minutes} min</span>
-          <span><Icon name="layers" size={15} /> {totalSets} sets</span>
-          <span><Icon name="dumbbell" size={15} /> {t.equipment}</span>
+          <span>
+            <Icon name="clock" size={15} /> {t('time.minutesApprox', { n: tpl.minutes })}
+          </span>
+          <span>
+            <Icon name="layers" size={15} /> {t('n.sets', { n: totalSets })}
+          </span>
+          <span>
+            <Icon name="dumbbell" size={15} /> {tpl.equipment}
+          </span>
         </div>
       </div>
 
@@ -43,21 +53,21 @@ export function TemplateDetailScreen({ id }: { id: string }) {
         <button
           className="btn"
           onClick={() => {
-            fromTemplate(t);
+            fromTemplate(tpl);
             useUI.getState().set({ workoutsTab: 'routines' });
-            toast('Saved to My Routines', 'success');
+            toast(t('tpl.saved'), 'success');
           }}
         >
-          <Icon name="plus" size={18} /> Save
+          <Icon name="plus" size={18} /> {t('common.save')}
         </button>
-        <button className="btn btn-primary" onClick={() => startTemplate(t)}>
-          <Icon name="play" size={16} fill /> Start
+        <button className="btn btn-primary" onClick={() => startTemplate(raw)}>
+          <Icon name="play" size={16} fill /> {t('common.start')}
         </button>
       </div>
 
-      <h2 className="lib-section">Exercises</h2>
+      <h2 className="lib-section">{t('tpl.exercises')}</h2>
       <div className="group-body">
-        {t.exercises.map((e, i) => {
+        {tpl.exercises.map((e, i) => {
           const ex = lookup(e.exerciseId);
           return (
             <button key={i} className="row is-tappable" onClick={() => navigate(`/library/exercise/${ex.id}`)}>
@@ -67,7 +77,7 @@ export function TemplateDetailScreen({ id }: { id: string }) {
               <span className="row-main">
                 <span className="row-label">{ex.name}</span>
                 <span className="row-detail">
-                  {e.sets} × {e.reps} · rest {e.restSec}s
+                  {t('tpl.rowDetail', { sets: e.sets, reps: fmtReps(e.reps), rest: t('time.seconds', { n: e.restSec }) })}
                 </span>
               </span>
               <Icon name="chevronRight" size={16} stroke={2.4} className="row-chevron" />

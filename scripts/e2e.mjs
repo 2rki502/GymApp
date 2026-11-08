@@ -320,6 +320,28 @@ await check('exercise picker search has an empty state', async () => {
   await page.getByRole('button', { name: 'Cancel' }).click();
 });
 
+await check('switch to Arabic (RTL) and back', async () => {
+  await tab('Profile');
+  await page.getByRole('tab', { name: 'العربية' }).click();
+  await page.getByText('التفضيلات').waitFor();
+  const dir = await page.evaluate(() => `${document.documentElement.lang}/${document.documentElement.dir}`);
+  if (dir !== 'ar/rtl') throw new Error(`expected ar/rtl, got ${dir}`);
+  // Navigation labels and library content are translated.
+  await page.locator('.tabbar').getByRole('button', { name: 'المكتبة' }).click();
+  await page.getByText('ضغط البنش بالبار').first().waitFor();
+  // Survives a reload (applied before first paint).
+  await page.goto(`${BASE}/?ar=1`);
+  const dir2 = await page.evaluate(() => document.documentElement.dir);
+  if (dir2 !== 'rtl') throw new Error('direction not restored after reload');
+  await shot('arabic');
+  const profile = page.locator('.tabbar').getByRole('button', { name: 'حسابي' });
+  await profile.click();
+  await page.waitForTimeout(120);
+  await profile.click();
+  await page.getByRole('tab', { name: 'English' }).click();
+  await page.getByText('Preferences').waitFor();
+});
+
 await check('switch to imperial units', async () => {
   await tab('Profile');
   await page.getByRole('tab', { name: 'lb · in' }).click();

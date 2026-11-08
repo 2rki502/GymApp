@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { t } from '@/i18n';
 import { goBack, useRouter } from '@/lib/router';
 import { Icon } from './Icon';
 
@@ -61,9 +62,9 @@ export function Screen({ title, large, eyebrow, back, left, right, header, child
         <div className="navbar-inner">
           <div className="navbar-side">
             {back ? (
-              <button className="nav-back" onClick={() => goBack(back.to)} aria-label={`Back to ${back.label ?? 'previous'}`}>
+              <button className="nav-back" onClick={() => goBack(back.to)} aria-label={t('common.backTo', { label: back.label ?? t('common.back') })}>
                 <Icon name="chevronLeft" size={26} stroke={2.4} />
-                <span>{back.label ?? 'Back'}</span>
+                <span>{back.label ?? t('common.back')}</span>
               </button>
             ) : (
               left

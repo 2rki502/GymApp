@@ -1,7 +1,9 @@
 /**
- * Progress photos live in IndexedDB as Blobs (localStorage is far too small).
+ * Progress photos live in IndexedDB (localStorage is far too small).
  * Images are downscaled and re-encoded as JPEG before storing.
  */
+import { t } from '@/i18n';
+
 const DB_NAME = 'forge-photos';
 const STORE = 'photos';
 
@@ -10,11 +12,11 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 function open(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve, reject) => {
-    if (typeof indexedDB === 'undefined') return reject(new Error('Photo storage is not available in this browser.'));
+    if (typeof indexedDB === 'undefined') return reject(new Error(t('ph.unavailable')));
     const req = indexedDB.open(DB_NAME, 1);
     req.onupgradeneeded = () => req.result.createObjectStore(STORE);
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error ?? new Error('Could not open photo storage.'));
+    req.onerror = () => reject(req.error ?? new Error(t('ph.openFailed')));
   });
   dbPromise.catch(() => (dbPromise = null));
   return dbPromise;
@@ -67,11 +69,11 @@ export async function compressImage(file: Blob, maxSide = 1440, quality = 0.84):
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Could not process image.');
+  if (!ctx) throw new Error(t('ph.processFailed'));
   ctx.drawImage(source.img, 0, 0, width, height);
   if ('close' in source.img) (source.img as ImageBitmap).close();
   const blob = await new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not encode image.'))), 'image/jpeg', quality),
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error(t('ph.encodeFailed')))), 'image/jpeg', quality),
   );
   return { blob, width, height };
 }
@@ -93,7 +95,7 @@ async function loadImage(file: Blob): Promise<{ img: CanvasImageSource; width: n
     await img.decode();
     return { img, width: img.naturalWidth, height: img.naturalHeight };
   } catch {
-    throw new Error('This image format is not supported.');
+    throw new Error(t('ph.unsupported'));
   } finally {
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }

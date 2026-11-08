@@ -1,4 +1,5 @@
 import type { StateStorage } from 'zustand/middleware';
+import { t } from '@/i18n';
 
 /**
  * Storage adapter for persisted state. Currently localStorage; replace this module
@@ -39,7 +40,7 @@ export const safeStorage: StateStorage = {
     try {
       backing.setItem(key, value);
     } catch {
-      listeners.forEach((fn) => fn('Storage is full — your latest changes could not be saved. Export a backup and remove old photos.'));
+      listeners.forEach((fn) => fn(t('err.storageFull')));
     }
   },
   removeItem: (key) => (backing ? backing.removeItem(key) : void memory.delete(key)),

@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
+import { applyLanguage, setLang } from '@/i18n';
+import { useData } from '@/store/useData';
 import { ExerciseDetailScreen, ExercisePeekSheet } from '@/features/library/ExerciseDetail';
 import { LibraryScreen } from '@/features/library/Library';
 import { TemplateDetailScreen } from '@/features/library/TemplateDetail';
@@ -43,9 +45,14 @@ function resolve(path: string): ReactNode {
 
 export function App() {
   const { path, direction } = useRouter();
+  const lang = useData((s) => s.settings.language);
+  // Set synchronously so every t() call in this render uses the new language,
+  // then sync <html lang/dir>. Keying the tree by language remounts it cleanly.
+  setLang(lang);
+  useEffect(() => applyLanguage(lang), [lang]);
   useThemeSync();
   return (
-    <div className="app">
+    <div className="app" key={lang}>
       <div key={path} className={`page page-${direction}`}>
         <ErrorBoundary key={path}>{resolve(path)}</ErrorBoundary>
       </div>

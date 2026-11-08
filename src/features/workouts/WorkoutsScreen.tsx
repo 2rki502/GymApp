@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
+import { localizePreset } from '@/data/localize';
 import { SPLIT_PRESETS } from '@/data/templates';
-import { formatDuration, formatLongDate, formatMonth, weekdayIndex, WEEKDAYS_SHORT } from '@/domain/dates';
+import { formatDuration, formatLongDate, formatMonth, weekdayIndex, weekdayLetter, weekdayShort } from '@/domain/dates';
 import { workoutDurationSec, workoutSetCount } from '@/domain/metrics';
 import type { Routine, Workout } from '@/domain/types';
 import { startEmptyWorkout, startRoutine } from '@/features/session/actions';
+import { getLang, joinList, t } from '@/i18n';
 import { navigate } from '@/lib/router';
 import { sortedWorkouts, useExerciseLookup, usePRs } from '@/store/selectors';
 import { useData } from '@/store/useData';
@@ -19,18 +21,18 @@ export function WorkoutsScreen() {
   const setUI = useUI((s) => s.set);
   const right =
     tab === 'routines' ? (
-      <button className="nav-btn" aria-label="New routine" onClick={() => navigate('/workouts/routine/new')}>
+      <button className="nav-btn" aria-label={t('wk.newRoutine')} onClick={() => navigate('/workouts/routine/new')}>
         <Icon name="plus" size={24} />
       </button>
     ) : tab === 'splits' ? (
-      <button className="nav-btn" aria-label="New split" onClick={() => navigate('/workouts/split/new')}>
+      <button className="nav-btn" aria-label={t('wk.newSplit')} onClick={() => navigate('/workouts/split/new')}>
         <Icon name="plus" size={24} />
       </button>
     ) : null;
 
   return (
     <Screen
-      title="Workouts"
+      title={t('wk.title')}
       large
       right={right}
       header={
@@ -39,9 +41,9 @@ export function WorkoutsScreen() {
             value={tab}
             onChange={(v) => setUI({ workoutsTab: v })}
             options={[
-              { value: 'routines', label: 'Routines' },
-              { value: 'history', label: 'History' },
-              { value: 'splits', label: 'Splits' },
+              { value: 'routines', label: t('wk.routines') },
+              { value: 'history', label: t('wk.history') },
+              { value: 'splits', label: t('wk.splits') },
             ]}
           />
         </div>
@@ -70,24 +72,24 @@ function RoutinesTab() {
           <Icon name="plus" size={22} stroke={2.6} />
         </span>
         <span>
-          <strong>Start Empty Workout</strong>
-          <span className="muted">Log exercises as you go</span>
+          <strong>{t('wk.startEmpty')}</strong>
+          <span className="muted">{t('wk.startEmptySub')}</span>
         </span>
       </button>
 
-      <h2 className="wk-section">My Routines</h2>
+      <h2 className="wk-section">{t('wk.myRoutines')}</h2>
       {routines.length === 0 ? (
         <EmptyState
           icon="layers"
-          title="No routines yet"
-          text="Create a routine, or pick a split template to generate a full program."
+          title={t('wk.noRoutines')}
+          text={t('wk.noRoutinesText')}
           action={
             <div className="btn-row" style={{ width: '100%' }}>
               <button className="btn" onClick={() => useUI.getState().set({ workoutsTab: 'splits' })}>
-                Templates
+                {t('wk.templates')}
               </button>
               <button className="btn btn-primary" onClick={() => navigate('/workouts/routine/new')}>
-                Create
+                {t('common.create')}
               </button>
             </div>
           }
@@ -112,17 +114,18 @@ function RoutineCard({ r, last }: { r: Routine; last?: string }) {
     actionSheet({
       title: r.name,
       actions: [
-        { label: 'Edit', onSelect: () => navigate(`/workouts/routine/${r.id}`) },
-        { label: 'Duplicate', onSelect: () => dup(r.id) && toast('Routine duplicated', 'success') },
+        { label: t('common.edit'), onSelect: () => navigate(`/workouts/routine/${r.id}`) },
+        { label: t('wk.duplicate'), onSelect: () => dup(r.id) && toast(t('wk.duplicated'), 'success') },
         {
-          label: 'Delete',
+          label: t('common.delete'),
           destructive: true,
           onSelect: async () => {
-            if (await confirm({ title: `Delete “${r.name}”?`, message: 'Your workout history is kept.', confirmLabel: 'Delete', destructive: true })) del(r.id);
+            if (await confirm({ title: t('wk.deleteTitle', { name: r.name }), message: t('wk.historyKept'), confirmLabel: t('common.delete'), destructive: true })) del(r.id);
           },
         },
       ],
     });
+  const lastText = last ? formatLongDate(last) : '';
   return (
     <div className={`routine-card color-${r.color}`}>
       <button className="routine-body" onClick={() => navigate(`/workouts/routine/${r.id}`)}>
@@ -130,17 +133,18 @@ function RoutineCard({ r, last }: { r: Routine; last?: string }) {
           <span className="dot" style={{ background: 'var(--c)' }} />
           <strong>{r.name}</strong>
         </div>
-        <p className="routine-ex">{r.exercises.map((e) => lookup(e.exerciseId).name).join(' · ') || 'No exercises'}</p>
+        <p className="routine-ex">{r.exercises.map((e) => lookup(e.exerciseId).name).join(' · ') || t('wk.noExercises')}</p>
         <p className="routine-meta">
-          {r.exercises.length} exercises · {sets} sets{last ? ` · last ${formatLongDate(last).toLowerCase()}` : ''}
+          {t('n.exercises', { n: r.exercises.length })} · {t('n.sets', { n: sets })}
+          {last ? ` · ${t('wk.lastDone', { date: getLang() === 'en' ? lastText.toLowerCase() : lastText })}` : ''}
         </p>
       </button>
       <div className="routine-actions">
-        <button className="icon-btn" onClick={menu} aria-label={`${r.name} options`}>
+        <button className="icon-btn" onClick={menu} aria-label={t('editor.options', { name: r.name })}>
           <Icon name="more" size={20} stroke={3} />
         </button>
         <button className="btn btn-primary btn-sm" disabled={!r.exercises.length} onClick={() => startRoutine(r)}>
-          <Icon name="play" size={13} fill /> Start
+          <Icon name="play" size={13} fill /> {t('common.start')}
         </button>
       </div>
     </div>
@@ -168,11 +172,11 @@ function HistoryTab() {
     return (
       <EmptyState
         icon="calendar"
-        title="No workouts logged"
-        text="Finished workouts appear here with every set, rep and PR."
+        title={t('wk.noWorkouts')}
+        text={t('wk.noWorkoutsText')}
         action={
           <button className="btn btn-primary" onClick={() => startEmptyWorkout()}>
-            Start a Workout
+            {t('wk.startWorkout')}
           </button>
         }
       />
@@ -214,9 +218,15 @@ export function HistoryCard({ w }: { w: Workout }) {
         )}
       </div>
       <div className="history-stats">
-        <span><Icon name="clock" size={14} /> {formatDuration(workoutDurationSec(w))}</span>
-        <span><Icon name="dumbbell" size={14} /> {w.exercises.length} exercise{w.exercises.length === 1 ? '' : 's'}</span>
-        <span><Icon name="layers" size={14} /> {workoutSetCount(w)} sets</span>
+        <span>
+          <Icon name="clock" size={14} /> {formatDuration(workoutDurationSec(w))}
+        </span>
+        <span>
+          <Icon name="dumbbell" size={14} /> {t('n.exercises', { n: w.exercises.length })}
+        </span>
+        <span>
+          <Icon name="layers" size={14} /> {t('n.sets', { n: workoutSetCount(w) })}
+        </span>
       </div>
       <ul className="history-ex">
         {w.exercises.slice(0, 4).map((e) => (
@@ -224,7 +234,7 @@ export function HistoryCard({ w }: { w: Workout }) {
             <span className="faint num">{e.sets.length}×</span> {lookup(e.exerciseId).name}
           </li>
         ))}
-        {w.exercises.length > 4 && <li className="faint">+{w.exercises.length - 4} more</li>}
+        {w.exercises.length > 4 && <li className="faint">{t('common.more', { n: w.exercises.length - 4 })}</li>}
       </ul>
     </button>
   );
@@ -233,11 +243,11 @@ export function HistoryCard({ w }: { w: Workout }) {
 function SplitsTab() {
   const { splits, routines, settings, updateSettings, applySplitPreset } = useData();
   const today = weekdayIndex(new Date());
-  const name = (id: string | null) => (id ? routines.find((r) => r.id === id)?.name ?? '—' : 'Rest');
+  const name = (id: string | null) => (id ? routines.find((r) => r.id === id)?.name ?? '—' : t('wk.rest'));
 
   return (
     <>
-      {splits.length > 0 && <h2 className="wk-section">My Splits</h2>}
+      {splits.length > 0 && <h2 className="wk-section">{t('wk.mySplits')}</h2>}
       {splits.map((sp) => {
         const active = settings.activeSplitId === sp.id;
         return (
@@ -245,43 +255,43 @@ function SplitsTab() {
             <button className="split-head" onClick={() => navigate(`/workouts/split/${sp.id}`)}>
               <div>
                 <strong>{sp.name}</strong>
-                <span className="muted">{sp.days.filter(Boolean).length} training days / week</span>
+                <span className="muted">{t('n.trainingDays', { n: sp.days.filter(Boolean).length })}</span>
               </div>
-              {active ? <span className="badge">Active</span> : <Icon name="chevronRight" size={18} className="faint" />}
+              {active ? <span className="badge">{t('wk.active')}</span> : <Icon name="chevronRight" size={18} className="faint" />}
             </button>
             <div className="split-week">
               {sp.days.map((d, i) => (
                 <div key={i} className={`split-day ${d ? 'is-train' : ''} ${i === today ? 'is-today' : ''}`}>
-                  <span>{WEEKDAYS_SHORT[i]}</span>
+                  <span>{weekdayShort(i)}</span>
                   <strong>{name(d)}</strong>
                 </div>
               ))}
             </div>
             {!active && (
               <button className="btn btn-sm btn-block" style={{ marginTop: 12 }} onClick={() => updateSettings({ activeSplitId: sp.id })}>
-                Set as active split
+                {t('wk.setActive')}
               </button>
             )}
           </div>
         );
       })}
 
-      <h2 className="wk-section">Program Templates</h2>
-      <p className="muted wk-hint">Creates the routines and a weekly schedule for you. Everything stays editable.</p>
+      <h2 className="wk-section">{t('wk.programTemplates')}</h2>
+      <p className="muted wk-hint">{t('wk.programHint')}</p>
       <div className="preset-list">
-        {SPLIT_PRESETS.map((p) => (
+        {SPLIT_PRESETS.map(localizePreset).map((p) => (
           <button
             key={p.id}
             className="card card-tappable preset"
             onClick={async () => {
               const ok = await confirm({
-                title: `Use ${p.name}?`,
-                message: `Adds ${p.routines.length} routines (${p.routines.map((r) => r.name).join(', ')}) and makes this your active split.`,
-                confirmLabel: 'Add Program',
+                title: t('wk.useTitle', { name: p.name }),
+                message: t('wk.useMsg', { n: p.routines.length, names: joinList(p.routines.map((r) => r.name)) }),
+                confirmLabel: t('wk.addProgram'),
               });
               if (ok) {
                 applySplitPreset(p);
-                toast(`${p.name} is now your active split`, 'success');
+                toast(t('wk.nowActive', { name: p.name }), 'success');
               }
             }}
           >
@@ -291,8 +301,8 @@ function SplitsTab() {
             </div>
             <div className="preset-days">
               {p.days.map((d, i) => (
-                <span key={i} className={d ? 'is-train' : ''} title={WEEKDAYS_SHORT[i]}>
-                  {WEEKDAYS_SHORT[i][0]}
+                <span key={i} className={d ? 'is-train' : ''} title={weekdayShort(i)}>
+                  {weekdayLetter(i)}
                 </span>
               ))}
             </div>

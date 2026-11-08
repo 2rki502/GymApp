@@ -43,10 +43,14 @@ const PATHS = {
   layers: 'M12 3 2.5 8 12 13l9.5-5zM2.5 12.5 12 17.5l9.5-5M2.5 16.5 12 21.5l9.5-5',
   warning: 'M12 3.5 2 20.5h20zM12 10v4.5M12 17.5h.01',
   reorder: 'M4 8h16M4 16h16',
-  heart: 'M12 20.5s-8.5-5-8.5-11A4.5 4.5 0 0 1 12 6.6a4.5 4.5 0 0 1 8.5 2.9c0 6-8.5 11-8.5 11z',
+  globe: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3.5 9h17M3.5 15h17M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9M12 3c-2.5 2.6-3.7 5.6-3.7 9s1.2 6.4 3.7 9',
+  heart:'M12 20.5s-8.5-5-8.5-11A4.5 4.5 0 0 1 12 6.6a4.5 4.5 0 0 1 8.5 2.9c0 6-8.5 11-8.5 11z',
 } as const;
 
 export type IconName = keyof typeof PATHS;
+
+/** Icons that point "forward/back" and must mirror in right-to-left layouts. */
+const DIRECTIONAL = new Set<IconName>(['chevronLeft', 'chevronRight']);
 
 export function Icon({
   name,
@@ -73,7 +77,7 @@ export function Icon({
       strokeWidth={stroke}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className}
+      className={DIRECTIONAL.has(name) ? `icon-dir ${className ?? ''}` : className}
       style={style}
       aria-hidden="true"
     >

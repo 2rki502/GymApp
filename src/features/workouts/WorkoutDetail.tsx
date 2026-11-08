@@ -4,11 +4,12 @@ import { e1rm, isWorkingSet, workoutDurationSec, workoutSetCount } from '@/domai
 import { fmtNumber, fmtWeight, toDisplayWeight } from '@/domain/units';
 import { uid } from '@/domain/id';
 import { canComplete, newSet } from '@/domain/workoutOps';
-import type { Routine, Workout } from '@/domain/types';
+import type { Routine, SetType, Workout } from '@/domain/types';
 import { prLabel } from '@/features/session/Session';
 import { beginWorkout } from '@/features/session/actions';
 import { WorkoutEditor } from '@/features/workout/WorkoutEditor';
 import { ExerciseThumb } from '@/features/library/figure/Figure';
+import { t, type Key } from '@/i18n';
 import { goBack, navigate } from '@/lib/router';
 import { useExerciseLookup, usePRs } from '@/store/selectors';
 import { useData } from '@/store/useData';
@@ -18,13 +19,15 @@ import { Icon } from '@/ui/Icon';
 import { Screen } from '@/ui/Screen';
 import './workouts.css';
 
+const LETTER: Record<SetType, Key | null> = { normal: null, warmup: 'set.warmup', drop: 'set.drop', failure: 'set.failure' };
+
 export function WorkoutDetailScreen({ id }: { id: string }) {
   const w = useData((s) => s.workouts.find((x) => x.id === id));
   const [editing, setEditing] = useState(false);
   if (!w) {
     return (
-      <Screen title="Workout" back={{ label: 'Workouts', to: '/workouts' }}>
-        <EmptyState icon="info" title="Workout not found" text="It may have been deleted." />
+      <Screen title={t('wd.title')} back={{ label: t('wk.title'), to: '/workouts' }}>
+        <EmptyState icon="info" title={t('wd.notFound')} text={t('wd.notFoundText')} />
       </Screen>
     );
   }
@@ -77,22 +80,22 @@ function ViewWorkout({ w, onEdit }: { w: Workout; onEdit: () => void }) {
       }),
     };
     saveRoutine(r);
-    toast('Saved as routine', 'success');
+    toast(t('wd.savedRoutine'), 'success');
   };
 
   const menu = () =>
     actionSheet({
       actions: [
-        { label: 'Edit workout', onSelect: onEdit },
-        { label: 'Repeat workout', onSelect: repeat },
-        { label: 'Save as routine', onSelect: saveAsRoutine },
+        { label: t('wd.editWorkout'), onSelect: onEdit },
+        { label: t('wd.repeat'), onSelect: repeat },
+        { label: t('wd.saveRoutine'), onSelect: saveAsRoutine },
         {
-          label: 'Delete workout',
+          label: t('wd.delete'),
           destructive: true,
           onSelect: async () => {
-            if (await confirm({ title: 'Delete this workout?', message: 'This also removes any PRs it set.', confirmLabel: 'Delete', destructive: true })) {
+            if (await confirm({ title: t('wd.deleteTitle'), message: t('wd.deleteMsg'), confirmLabel: t('common.delete'), destructive: true })) {
               del(w.id);
-              toast('Workout deleted');
+              toast(t('wd.deleted'));
               goBack('/workouts');
             }
           },
@@ -103,11 +106,13 @@ function ViewWorkout({ w, onEdit }: { w: Workout; onEdit: () => void }) {
   return (
     <Screen
       title={w.name}
-      back={{ label: 'Back', to: '/workouts' }}
+      back={{ label: t('common.back'), to: '/workouts' }}
       right={
         <>
-          <button className="nav-btn" onClick={onEdit}>Edit</button>
-          <button className="nav-btn" onClick={menu} aria-label="More actions">
+          <button className="nav-btn" onClick={onEdit}>
+            {t('common.edit')}
+          </button>
+          <button className="nav-btn" onClick={menu} aria-label={t('wd.moreActions')}>
             <Icon name="more" size={22} stroke={3} />
           </button>
         </>
@@ -118,9 +123,18 @@ function ViewWorkout({ w, onEdit }: { w: Workout; onEdit: () => void }) {
         {formatLongDate(w.startedAt)} · {formatTime(w.startedAt)}
       </p>
       <div className="wd-stats">
-        <div><label>Duration</label><span className="num">{formatDuration(workoutDurationSec(w))}</span></div>
-        <div><label>Sets</label><span className="num">{workoutSetCount(w)}</span></div>
-        <div><label>PRs</label><span className="num">{new Set(prs.map((p) => p.exerciseId)).size}</span></div>
+        <div>
+          <label>{t('stat.duration')}</label>
+          <span className="num">{formatDuration(workoutDurationSec(w))}</span>
+        </div>
+        <div>
+          <label>{t('stat.sets')}</label>
+          <span className="num">{workoutSetCount(w)}</span>
+        </div>
+        <div>
+          <label>{t('stat.prs')}</label>
+          <span className="num">{new Set(prs.map((p) => p.exerciseId)).size}</span>
+        </div>
       </div>
       {w.note && <p className="wd-note">{w.note}</p>}
 
@@ -130,29 +144,42 @@ function ViewWorkout({ w, onEdit }: { w: Workout; onEdit: () => void }) {
         return (
           <section key={e.id} className="card wd-ex">
             <button className="wd-ex-head" onClick={() => navigate(`/progress/exercise/${ex.id}`)}>
-              <span className="ex-thumb ex-thumb-sm"><ExerciseThumb anim={ex.anim} /></span>
+              <span className="ex-thumb ex-thumb-sm">
+                <ExerciseThumb anim={ex.anim} />
+              </span>
               <strong>{ex.name}</strong>
               <Icon name="chevronRight" size={16} className="faint" />
             </button>
             <table className="wd-table">
               <tbody>
                 {e.sets.map((s) => {
-                  const label = s.type === 'warmup' ? 'W' : s.type === 'drop' ? 'D' : s.type === 'failure' ? 'F' : String(++n);
+                  const letter = LETTER[s.type];
+                  const label = letter ? t(letter) : String(++n);
                   const pr = prSets.get(s.id);
                   return (
                     <tr key={s.id} className={s.type === 'warmup' ? 'is-warmup' : ''}>
                       <td className={`set-type-${s.type} wd-set`}>{label}</td>
                       <td className="num">
                         {ex.kind === 'time'
-                          ? `${s.duration ?? 0}s`
+                          ? t('time.seconds', { n: s.duration ?? 0 })
                           : ex.kind === 'reps'
-                            ? `${s.reps ?? 0} reps${s.weight ? ` +${fmtWeight(s.weight, units)}` : ''}`
+                            ? s.weight
+                              ? t('wd.repsPlus', { reps: t('n.reps', { n: s.reps ?? 0 }), weight: fmtWeight(s.weight, units) })
+                              : t('n.reps', { n: s.reps ?? 0 })
                             : `${fmtWeight(s.weight ?? 0, units)} × ${s.reps ?? 0}`}
                       </td>
                       <td className="num faint">
-                        {ex.kind === 'weight' && isWorkingSet(s) && (s.reps ?? 0) > 1 ? `e1RM ${fmtNumber(toDisplayWeight(e1rm(s.weight ?? 0, s.reps ?? 0), units), 0)}` : ''}
+                        {ex.kind === 'weight' && isWorkingSet(s) && (s.reps ?? 0) > 1
+                          ? t('wd.e1rm', { n: fmtNumber(toDisplayWeight(e1rm(s.weight ?? 0, s.reps ?? 0), units), 0) })
+                          : ''}
                       </td>
-                      <td>{pr && <span className="badge badge-gold"><Icon name="trophy" size={11} stroke={2.4} /> {prLabel(pr)}</span>}</td>
+                      <td>
+                        {pr && (
+                          <span className="badge badge-gold">
+                            <Icon name="trophy" size={11} stroke={2.4} /> {prLabel(pr)}
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -162,7 +189,7 @@ function ViewWorkout({ w, onEdit }: { w: Workout; onEdit: () => void }) {
         );
       })}
       <button className="btn btn-block" style={{ marginTop: 16 }} onClick={repeat}>
-        <Icon name="swap" size={18} /> Repeat this workout
+        <Icon name="swap" size={18} /> {t('wd.repeatThis')}
       </button>
     </Screen>
   );
@@ -178,7 +205,7 @@ function EditWorkout({ w, onDone }: { w: Workout; onDone: () => void }) {
   const setStart = (date: string, time: string) => {
     const [y, m, d] = date.split('-').map(Number);
     const [hh, mm] = time.split(':').map(Number);
-    if ([y, m, d, hh, mm].some((n) => Number.isNaN(n))) return;
+    if ([y, m, d, hh, mm].some((x) => Number.isNaN(x))) return;
     const ns = new Date(y, m - 1, d, hh, mm);
     setDraft((x) => ({ ...x, startedAt: ns.toISOString(), endedAt: new Date(ns.getTime() + durMin * 60_000).toISOString() }));
   };
@@ -191,41 +218,51 @@ function EditWorkout({ w, onDone }: { w: Workout; onDone: () => void }) {
         .map((e) => ({ ...e, sets: e.sets.filter((s) => canComplete(s, lookup(e.exerciseId).kind)).map((s) => ({ ...s, done: true })) }))
         .filter((e) => e.sets.length),
     };
-    if (!cleaned.exercises.length) return toast('A workout needs at least one complete set', 'error');
-    if (new Date(cleaned.startedAt) > new Date()) return toast('Start time can’t be in the future', 'error');
+    if (!cleaned.exercises.length) return toast(t('wd.needSet'), 'error');
+    if (new Date(cleaned.startedAt) > new Date()) return toast(t('wd.future'), 'error');
     save(cleaned);
-    toast('Workout updated', 'success');
+    toast(t('wd.updated'), 'success');
     onDone();
   };
 
   return (
     <Screen
-      title="Edit Workout"
+      title={t('wd.editTitle')}
       left={
         <button
           className="nav-btn"
           onClick={async () => {
-            if (draft !== w && !(await confirm({ title: 'Discard changes?', confirmLabel: 'Discard', destructive: true }))) return;
+            if (draft !== w && !(await confirm({ title: t('common.discardChanges'), confirmLabel: t('common.discard'), destructive: true }))) return;
             onDone();
           }}
         >
-          Cancel
+          {t('common.cancel')}
         </button>
       }
-      right={<button className="nav-btn is-strong" onClick={onSave}>Save</button>}
+      right={
+        <button className="nav-btn is-strong" onClick={onSave}>
+          {t('common.save')}
+        </button>
+      }
     >
-      <input className="routine-name-input" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} aria-label="Workout name" />
+      <input className="routine-name-input" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} aria-label={t('session.nameAria')} />
       <div className="wd-edit-meta">
         <label className="field">
-          <span>Date</span>
-          <input className="input" type="date" value={toLocalDate(start)} max={toLocalDate(new Date())} onChange={(e) => setStart(e.target.value, `${start.getHours()}:${start.getMinutes()}`)} />
+          <span>{t('common.date')}</span>
+          <input
+            className="input"
+            type="date"
+            value={toLocalDate(start)}
+            max={toLocalDate(new Date())}
+            onChange={(e) => setStart(e.target.value, `${start.getHours()}:${start.getMinutes()}`)}
+          />
         </label>
         <label className="field">
-          <span>Start</span>
+          <span>{t('wd.start')}</span>
           <input className="input" type="time" value={formatTime(start)} onChange={(e) => setStart(toLocalDate(start), e.target.value)} />
         </label>
         <label className="field">
-          <span>Minutes</span>
+          <span>{t('wd.minutes')}</span>
           <input
             className="input"
             inputMode="numeric"
@@ -240,7 +277,7 @@ function EditWorkout({ w, onDone }: { w: Workout; onDone: () => void }) {
       <div style={{ height: 16 }} />
       <WorkoutEditor workout={draft} mode="edit" onChange={(fn) => setDraft((d) => fn(d))} />
       <label className="field">
-        <span>Notes</span>
+        <span>{t('common.notes')}</span>
         <textarea className="input" value={draft.note ?? ''} onChange={(e) => setDraft({ ...draft, note: e.target.value })} />
       </label>
     </Screen>

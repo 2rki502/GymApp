@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
-import { GROUP_LABEL, GYM_GROUPS, HOME_GROUP_LIST, MUSCLE_LABEL } from '@/data/exercises';
+import { GYM_GROUPS, HOME_GROUP_LIST } from '@/data/exercises';
+import { englishName, equipmentLabel, groupLabel, muscleLabel } from '@/data/localize';
 import { uid } from '@/domain/id';
 import type { Exercise, ExerciseGroup, ExerciseKind, ID, Muscle } from '@/domain/types';
 import { ExerciseThumb } from '@/features/library/figure/Figure';
+import { joinList, t } from '@/i18n';
 import { useAllExercises } from '@/store/selectors';
 import { useData } from '@/store/useData';
 import { Chips, Segmented } from '@/ui/controls';
@@ -13,14 +15,27 @@ import './exercises.css';
 
 type Filter = 'all' | 'recent' | ExerciseGroup;
 
+/** Search across the localised and English name, muscles, equipment and category. */
 export function matchesQuery(e: Exercise, q: string): boolean {
   if (!q) return true;
-  const hay = `${e.name} ${e.primary.join(' ')} ${e.secondary.join(' ')} ${e.equipment.join(' ')} ${GROUP_LABEL[e.group]}`.toLowerCase();
+  const hay = [
+    e.name,
+    englishName(e.id),
+    ...e.primary.map(muscleLabel),
+    ...e.secondary.map(muscleLabel),
+    ...e.primary,
+    ...e.secondary,
+    ...e.equipment.map(equipmentLabel),
+    ...e.equipment,
+    groupLabel(e.group),
+  ]
+    .join(' ')
+    .toLowerCase();
   return q
     .toLowerCase()
     .split(/\s+/)
     .filter(Boolean)
-    .every((t) => hay.includes(t));
+    .every((term) => hay.includes(term));
 }
 
 export function ExercisePicker({
@@ -28,7 +43,7 @@ export function ExercisePicker({
   onClose,
   onPick,
   multi = true,
-  title = 'Add Exercises',
+  title = t('editor.addTitle'),
 }: {
   open: boolean;
   onClose: () => void;
@@ -54,10 +69,10 @@ export function ExercisePicker({
 
   const hasCustom = all.some((e) => e.custom);
   const filters: { value: Filter; label: string }[] = [
-    { value: 'all', label: 'All' },
-    ...(recentIds.length ? [{ value: 'recent' as Filter, label: 'Recent' }] : []),
-    ...(hasCustom ? [{ value: 'custom' as Filter, label: 'Custom' }] : []),
-    ...[...GYM_GROUPS, ...HOME_GROUP_LIST].map((g) => ({ value: g as Filter, label: GROUP_LABEL[g] })),
+    { value: 'all', label: t('picker.all') },
+    ...(recentIds.length ? [{ value: 'recent' as Filter, label: t('picker.recent') }] : []),
+    ...(hasCustom ? [{ value: 'custom' as Filter, label: t('picker.custom') }] : []),
+    ...[...GYM_GROUPS, ...HOME_GROUP_LIST].map((g) => ({ value: g as Filter, label: groupLabel(g) })),
   ];
 
   const list = useMemo(() => {
@@ -95,12 +110,16 @@ export function ExercisePicker({
         onClose={close}
         full
         title={title}
-        left={<button className="nav-btn" onClick={close}>Cancel</button>}
-        right={<button className="nav-btn" onClick={() => setCreating(true)} aria-label="New custom exercise"><Icon name="plus" /></button>}
+        left={<button className="nav-btn" onClick={close}>{t('common.cancel')}</button>}
+        right={
+          <button className="nav-btn" onClick={() => setCreating(true)} aria-label={t('picker.newAria')}>
+            <Icon name="plus" />
+          </button>
+        }
       >
         <div className="search">
           <Icon name="search" size={18} />
-          <input type="search" placeholder="Search exercises, muscles, equipment" value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" />
+          <input type="search" placeholder={t('picker.search')} value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" />
         </div>
         <Chips value={filter} options={filters} onChange={setFilter} />
         <div className="picker-list">
@@ -114,7 +133,7 @@ export function ExercisePicker({
                 <span className="picker-main">
                   <span className="picker-name">{e.name}</span>
                   <span className="picker-sub">
-                    {e.primary.map(MUSCLE_LABEL).join(', ') || GROUP_LABEL[e.group]} · {e.equipment[0] ?? '—'}
+                    {joinList(e.primary.map(muscleLabel)) || groupLabel(e.group)} · {e.equipment[0] ? equipmentLabel(e.equipment[0]) : '—'}
                   </span>
                 </span>
                 {multi && <span className="picker-check">{idx >= 0 ? <span className="num">{idx + 1}</span> : null}</span>}
@@ -123,9 +142,9 @@ export function ExercisePicker({
           })}
           {list.length === 0 && (
             <div className="picker-empty">
-              <p>No exercises match “{q}”.</p>
+              <p>{t('picker.noMatch', { q })}</p>
               <button className="btn btn-sm" onClick={() => setCreating(true)}>
-                <Icon name="plus" size={16} /> Create “{q}”
+                <Icon name="plus" size={16} /> {t('picker.create', { q })}
               </button>
             </div>
           )}
@@ -133,7 +152,7 @@ export function ExercisePicker({
         {multi && selected.length > 0 && (
           <div className="picker-footer">
             <button className="btn btn-primary btn-block" onClick={() => commit(selected)}>
-              Add {selected.length} exercise{selected.length > 1 ? 's' : ''}
+              {t('picker.addN', { n: selected.length })}
             </button>
           </div>
         )}
@@ -181,7 +200,7 @@ export function CustomExerciseSheet({
 
   const submit = () => {
     const n = name.trim();
-    if (!n) return toast('Give the exercise a name', 'error');
+    if (!n) return toast(t('custom.nameRequired'), 'error');
     const id = `custom-${uid()}`;
     save({
       id,
@@ -197,7 +216,7 @@ export function CustomExerciseSheet({
       recommended: { sets: 3, reps: kind === 'time' ? '30-60s' : '8-12', restSec: 90 },
       custom: true,
     });
-    toast(`${n} created`, 'success');
+    toast(t('custom.created', { name: n }), 'success');
     setName('');
     setEquipment('');
     onCreated(id);
@@ -207,39 +226,43 @@ export function CustomExerciseSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title="New Exercise"
-      left={<button className="nav-btn" onClick={onClose}>Cancel</button>}
-      right={<button className="nav-btn is-strong" onClick={submit} disabled={!name.trim()}>Save</button>}
+      title={t('custom.title')}
+      left={<button className="nav-btn" onClick={onClose}>{t('common.cancel')}</button>}
+      right={
+        <button className="nav-btn is-strong" onClick={submit} disabled={!name.trim()}>
+          {t('common.save')}
+        </button>
+      }
     >
       <label className="field">
-        <span>Name</span>
-        <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Cable Lateral Raise" autoCapitalize="words" />
+        <span>{t('custom.name')}</span>
+        <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('custom.namePlaceholder')} autoCapitalize="words" />
       </label>
       <div className="field">
-        <span>Tracking</span>
+        <span>{t('custom.tracking')}</span>
         <Segmented
           value={kind}
           onChange={setKind}
           options={[
-            { value: 'weight', label: 'Weight × Reps' },
-            { value: 'reps', label: 'Reps' },
-            { value: 'time', label: 'Time' },
+            { value: 'weight', label: t('custom.weightReps') },
+            { value: 'reps', label: t('custom.reps') },
+            { value: 'time', label: t('custom.time') },
           ]}
         />
       </div>
       <label className="field">
-        <span>Primary muscle</span>
+        <span>{t('custom.muscle')}</span>
         <select className="input" value={muscle} onChange={(e) => setMuscle(e.target.value as Muscle)}>
           {MUSCLE_OPTIONS.map((m) => (
             <option key={m} value={m}>
-              {MUSCLE_LABEL(m)}
+              {muscleLabel(m)}
             </option>
           ))}
         </select>
       </label>
       <label className="field">
-        <span>Equipment (optional)</span>
-        <input className="input" value={equipment} onChange={(e) => setEquipment(e.target.value)} placeholder="e.g. Cable machine" />
+        <span>{t('custom.equipment')}</span>
+        <input className="input" value={equipment} onChange={(e) => setEquipment(e.target.value)} placeholder={t('custom.equipmentPlaceholder')} />
       </label>
     </Sheet>
   );

@@ -131,11 +131,13 @@ export interface ProgressPhotoMeta {
 
 export type UnitSystem = 'metric' | 'imperial';
 export type ThemePref = 'system' | 'light' | 'dark';
+export type Language = 'en' | 'ar';
 
 export interface Settings {
   name: string;
   units: UnitSystem;
   theme: ThemePref;
+  language: Language;
   weeklyGoal: number;
   defaultRestSec: number;
   restSound: boolean;

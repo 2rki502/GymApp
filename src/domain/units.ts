@@ -1,10 +1,11 @@
+import { t } from '@/i18n';
 import type { UnitSystem } from './types';
 
 export const KG_PER_LB = 0.45359237;
 export const CM_PER_IN = 2.54;
 
-export const weightUnit = (u: UnitSystem) => (u === 'metric' ? 'kg' : 'lb');
-export const lengthUnit = (u: UnitSystem) => (u === 'metric' ? 'cm' : 'in');
+export const weightUnit = (u: UnitSystem) => (u === 'metric' ? t('unit.kg') : t('unit.lb'));
+export const lengthUnit = (u: UnitSystem) => (u === 'metric' ? t('unit.cm') : t('unit.in'));
 
 /** kg → display unit */
 export function toDisplayWeight(kg: number, u: UnitSystem): number {

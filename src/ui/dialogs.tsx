@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { create } from 'zustand';
+import { t } from '@/i18n';
 import { onStorageError } from '@/store/storage';
 
 /**
@@ -47,18 +48,18 @@ export function toast(text: string, tone: 'default' | 'success' | 'error' = 'def
 }
 
 export function DialogHost() {
-  const { confirm: c, sheet, toast: t } = useDialogs();
+  const { confirm: c, sheet, toast: current } = useDialogs();
 
   useEffect(() => onStorageError((m) => toast(m, 'error')), []);
 
   useEffect(() => {
-    if (!t) return;
-    const id = t.id;
+    if (!current) return;
+    const id = current.id;
     const h = setTimeout(() => {
       if (useDialogs.getState().toast?.id === id) useDialogs.setState({ toast: null });
     }, 2600);
     return () => clearTimeout(h);
-  }, [t]);
+  }, [current]);
 
   const closeConfirm = (v: boolean) => {
     c?.resolve(v);
@@ -76,9 +77,9 @@ export function DialogHost() {
               {c.message && <p>{c.message}</p>}
             </div>
             <div className="alert-actions">
-              <button onClick={() => closeConfirm(false)}>{c.cancelLabel ?? 'Cancel'}</button>
+              <button onClick={() => closeConfirm(false)}>{c.cancelLabel ?? t('common.cancel')}</button>
               <button className={c.destructive ? 'is-destructive' : 'is-primary'} onClick={() => closeConfirm(true)}>
-                {c.confirmLabel ?? 'OK'}
+                {c.confirmLabel ?? t('common.ok')}
               </button>
             </div>
           </div>
@@ -110,15 +111,15 @@ export function DialogHost() {
             </div>
             <div className="asheet-group">
               <button className="is-cancel" onClick={() => useDialogs.setState({ sheet: null })}>
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>
         </div>
       )}
-      {t && (
-        <div key={t.id} className={`toast toast-${t.tone}`} role="status">
-          {t.text}
+      {current && (
+        <div key={current.id} className={`toast toast-${current.tone}`} role="status">
+          {current.text}
         </div>
       )}
     </>,

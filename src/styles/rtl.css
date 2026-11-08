@@ -1,0 +1,204 @@
+/*
+ * Arabic typography + right-to-left mirroring.
+ * Flex/grid layouts mirror automatically under dir="rtl"; these rules cover the
+ * places that use physical left/right positioning.
+ */
+
+/* ─── Arabic typography ────────────────────────────────────────────────────── */
+:root[lang='ar'] {
+  --font-arabic: 'beIN Normal', 'beIN', 'SF Arabic', 'Geeza Pro', 'Noto Kufi Arabic', 'Segoe UI', Tahoma, system-ui, sans-serif;
+  --font: var(--font-arabic);
+  --font-display: var(--font-arabic);
+  /* Digits keep the rounded numerals; Arabic letters inside numbers fall through to the Arabic font. */
+  --font-rounded: ui-rounded, 'SF Pro Rounded', var(--font-arabic);
+}
+/* Letter-spacing breaks the joins between connected Arabic letters. */
+:root[lang='ar'] *,
+:root[lang='ar'] body {
+  letter-spacing: 0 !important;
+}
+:root[lang='ar'] body {
+  line-height: 1.5;
+}
+:root[lang='ar'] .large-title {
+  line-height: 1.3;
+  padding-bottom: 6px;
+}
+:root[lang='ar'] .eyebrow,
+:root[lang='ar'] .group-title,
+:root[lang='ar'] .field > span,
+:root[lang='ar'] .set-hdr,
+:root[lang='ar'] .re-fields label > span,
+:root[lang='ar'] .large-eyebrow {
+  text-transform: none;
+}
+:root[lang='ar'] .set-hdr {
+  font-size: 12px;
+}
+
+/* ─── Direction-aware icons ────────────────────────────────────────────────── */
+[dir='rtl'] .icon-dir {
+  transform: scaleX(-1);
+}
+
+/* ─── Page transitions slide from the reading direction ────────────────────── */
+[dir='rtl'] .page-push {
+  animation-name: page-push-rtl;
+}
+[dir='rtl'] .page-pop {
+  animation-name: page-pop-rtl;
+}
+@keyframes page-push-rtl {
+  from { transform: translateX(-34%); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes page-pop-rtl {
+  from { transform: translateX(18%); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* ─── Navigation ───────────────────────────────────────────────────────────── */
+[dir='rtl'] .nav-back {
+  margin-left: 0;
+  margin-right: -6px;
+  padding-right: 0;
+  padding-left: 8px;
+}
+[dir='rtl'] .nav-back span {
+  margin-left: 0;
+  margin-right: -2px;
+}
+[dir='rtl'] .avatar {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+/* ─── Text alignment for start-aligned blocks ─────────────────────────────── */
+[dir='rtl'] .card-tappable,
+[dir='rtl'] .row,
+[dir='rtl'] .routine-body,
+[dir='rtl'] .split-head,
+[dir='rtl'] .wd-ex-head,
+[dir='rtl'] .ex-head-main,
+[dir='rtl'] .set-hdr span:nth-child(2),
+[dir='rtl'] .set-prev,
+[dir='rtl'] .lib-card,
+[dir='rtl'] .tpl-card,
+[dir='rtl'] .tpl-hero,
+[dir='rtl'] .session-name,
+[dir='rtl'] .mini-bar,
+[dir='rtl'] .picker-item,
+[dir='rtl'] .today,
+[dir='rtl'] .home-tile,
+[dir='rtl'] .pr-card,
+[dir='rtl'] .quick,
+[dir='rtl'] .measure,
+[dir='rtl'] .summary-prs,
+[dir='rtl'] .start-empty {
+  text-align: right;
+}
+[dir='rtl'] .set-hdr span:nth-child(2),
+[dir='rtl'] .set-prev {
+  padding-left: 0;
+  padding-right: 4px;
+}
+[dir='rtl'] .row input.row-input,
+[dir='rtl'] .day-select {
+  text-align: left;
+}
+[dir='rtl'] .wd-table td:last-child {
+  text-align: left;
+}
+[dir='rtl'] .field > span {
+  padding-left: 0;
+  padding-right: 4px;
+}
+[dir='rtl'] .stat-value small {
+  margin-left: 0;
+  margin-right: 3px;
+}
+.unit-suffix {
+  width: auto !important;
+  min-width: 22px;
+}
+
+/* ─── Separators & borders ─────────────────────────────────────────────────── */
+[dir='rtl'] .row + .row::before,
+[dir='rtl'] .swipe + .swipe .row::before,
+[dir='rtl'] .row-sep::before {
+  left: 0;
+  right: 16px;
+}
+[dir='rtl'] .row:has(.row-icon) + .row::before {
+  left: 0;
+  right: 56px;
+}
+[dir='rtl'] .alert-actions button + button {
+  border-left: 0;
+  border-right: 0.5px solid var(--separator-strong);
+}
+[dir='rtl'] .profile-stats > div + div {
+  border-left: 0;
+  border-right: 0.5px solid var(--separator);
+}
+[dir='rtl'] .routine-card::before {
+  left: auto;
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+/* ─── Controls ─────────────────────────────────────────────────────────────── */
+[dir='rtl'] .segmented-thumb {
+  left: auto;
+  right: 2px;
+  transform: translateX(calc(-100% * var(--i)));
+}
+[dir='rtl'] .toggle span {
+  left: auto;
+  right: 2px;
+}
+[dir='rtl'] .toggle.is-on span {
+  transform: translateX(-20px);
+}
+[dir='rtl'] .swipe-action {
+  right: auto;
+  left: 0;
+}
+[dir='rtl'] .search svg {
+  left: auto;
+  right: 10px;
+}
+[dir='rtl'] .search input {
+  padding: 0 36px 0 12px;
+}
+
+/* ─── Positioned decorations ───────────────────────────────────────────────── */
+[dir='rtl'] .guide-tags {
+  left: auto;
+  right: 12px;
+}
+[dir='rtl'] .rest-progress {
+  transform-origin: right;
+}
+[dir='rtl'] .photo-tag {
+  left: auto;
+  right: 6px;
+}
+[dir='rtl'] .photo-sel {
+  right: auto;
+  left: 6px;
+}
+[dir='rtl'] .quick-play {
+  right: auto;
+  left: 14px;
+}
+[dir='rtl'] .tpl-glow {
+  background: radial-gradient(90% 80% at 0% 0%, color-mix(in srgb, var(--c) 26%, transparent), transparent 70%);
+}
+
+/* Numeric inputs & values stay left-to-right (digits, "+/-", units order). */
+[dir='rtl'] .set-input,
+[dir='rtl'] .re-input,
+[dir='rtl'] .big-input input {
+  direction: ltr;
+}

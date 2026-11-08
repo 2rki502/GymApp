@@ -19,13 +19,19 @@
 
     <title>Forge</title>
     <script>
-      // Apply the saved theme before first paint (mirrors src/lib/theme.ts).
+      // Apply the saved theme and language/direction before first paint
+      // (mirrors src/lib/theme.ts and src/i18n).
       (function () {
         var pref = 'dark';
+        var lang = 'en';
         try {
           var s = JSON.parse(localStorage.getItem('forge:data') || '{}');
-          pref = (s.state && s.state.settings && s.state.settings.theme) || 'dark';
+          var st = (s.state && s.state.settings) || {};
+          pref = st.theme || 'dark';
+          lang = st.language === 'ar' ? 'ar' : 'en';
         } catch (e) {}
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
         var dark = pref === 'system' ? !window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches : pref !== 'light';
         var t = dark ? 'dark' : 'light';
         var d = document.documentElement;

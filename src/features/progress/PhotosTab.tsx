@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { formatLongDate, formatMonth, parseLocalDate, toLocalDate } from '@/domain/dates';
 import { uid } from '@/domain/id';
 import type { PhotoPose, ProgressPhotoMeta } from '@/domain/types';
+import { t } from '@/i18n';
 import { compressImage, deletePhoto, getPhoto, putPhoto } from '@/lib/photoDb';
 import { useData } from '@/store/useData';
 import { EmptyState, Segmented } from '@/ui/controls';
@@ -33,14 +34,14 @@ function usePhotoUrl(id: string | null): string | null {
 
 function PhotoImg({ id, alt, className }: { id: string; alt: string; className?: string }) {
   const url = usePhotoUrl(id);
-  return url ? <img src={url} alt={alt} className={className} draggable={false} /> : <div className={`${className ?? ''} photo-loading`} aria-label="Loading photo" />;
+  return url ? (
+    <img src={url} alt={alt} className={className} draggable={false} />
+  ) : (
+    <div className={`${className ?? ''} photo-loading`} aria-label={t('ph.loading')} />
+  );
 }
 
-const POSES: { value: PhotoPose; label: string }[] = [
-  { value: 'front', label: 'Front' },
-  { value: 'side', label: 'Side' },
-  { value: 'back', label: 'Back' },
-];
+const poseLabel = (p: PhotoPose) => (p === 'front' ? t('ph.front') : p === 'side' ? t('ph.side') : t('ph.back'));
 
 export function PhotosTab() {
   const photos = useData((s) => s.photos);
@@ -56,6 +57,7 @@ export function PhotosTab() {
   const [comparePick, setComparePick] = useState(false);
 
   const pendingUrl = useObjectUrl(pending);
+  const poses: { value: PhotoPose; label: string }[] = (['front', 'side', 'back'] as const).map((p) => ({ value: p, label: poseLabel(p) }));
 
   const save = async () => {
     if (!pending) return;
@@ -65,17 +67,17 @@ export function PhotosTab() {
       const id = uid();
       await putPhoto(id, blob);
       addPhoto({ id, date, pose, width, height, createdAt: new Date().toISOString() });
-      toast('Photo saved', 'success');
+      toast(t('ph.saved'), 'success');
       setPending(null);
     } catch (e) {
-      toast(e instanceof Error ? e.message : 'Could not save photo', 'error');
+      toast(e instanceof Error ? e.message : t('ph.saveFailed'), 'error');
     } finally {
       setBusy(false);
     }
   };
 
   const del = async (p: ProgressPhotoMeta) => {
-    if (!(await confirm({ title: 'Delete this photo?', confirmLabel: 'Delete', destructive: true }))) return;
+    if (!(await confirm({ title: t('ph.deleteTitle'), confirmLabel: t('common.delete'), destructive: true }))) return;
     try {
       await deletePhoto(p.id);
     } catch {
@@ -117,7 +119,7 @@ export function PhotosTab() {
       />
       <div className="photo-actions">
         <button className="btn btn-primary" onClick={() => fileRef.current?.click()}>
-          <Icon name="camera" size={20} /> Add Photo
+          <Icon name="camera" size={20} /> {t('ph.add')}
         </button>
         {photos.length >= 2 && (
           <button
@@ -127,14 +129,14 @@ export function PhotosTab() {
               setCompare([]);
             }}
           >
-            <Icon name="swap" size={18} /> {comparePick ? 'Cancel' : 'Compare'}
+            <Icon name="swap" size={18} /> {comparePick ? t('common.cancel') : t('ph.compare')}
           </button>
         )}
       </div>
-      {comparePick && <p className="faint photo-hint">Select two photos to compare side by side.</p>}
+      {comparePick && <p className="faint photo-hint">{t('ph.hint')}</p>}
 
       {photos.length === 0 ? (
-        <EmptyState icon="image" title="No progress photos" text="Photos are stored privately on this device. Take them in the same light and pose for the best comparison." />
+        <EmptyState icon="image" title={t('ph.emptyTitle')} text={t('ph.emptyText')} />
       ) : (
         groups.map((g) => (
           <section key={g.label}>
@@ -142,10 +144,11 @@ export function PhotosTab() {
             <div className="photo-grid">
               {g.items.map((p) => {
                 const sel = compare?.indexOf(p.id) ?? -1;
+                const when = formatLongDate(p.date);
                 return (
                   <button key={p.id} className={`photo-cell ${sel >= 0 ? 'is-selected' : ''}`} onClick={() => (comparePick ? pickForCompare(p) : setViewing(p))}>
-                    <PhotoImg id={p.id} alt={`${p.pose} photo, ${p.date}`} className="photo-img" />
-                    <span className="photo-tag">{formatLongDate(p.date).replace(/^\w+, /, '')}</span>
+                    <PhotoImg id={p.id} alt={t('ph.alt', { pose: poseLabel(p.pose), date: when })} className="photo-img" />
+                    <span className="photo-tag">{when}</span>
                     {sel >= 0 && <span className="photo-sel num">{sel + 1}</span>}
                   </button>
                 );
@@ -158,7 +161,7 @@ export function PhotosTab() {
       {comparePick && compare?.length === 2 && (
         <div className="photo-compare-bar">
           <button className="btn btn-primary btn-block" onClick={() => setComparePick(false)}>
-            Compare Photos
+            {t('ph.compareButton')}
           </button>
         </div>
       )}
@@ -167,17 +170,25 @@ export function PhotosTab() {
       <Sheet
         open={!!pending}
         onClose={() => !busy && setPending(null)}
-        title="New Photo"
-        left={<button className="nav-btn" onClick={() => setPending(null)} disabled={busy}>Cancel</button>}
-        right={<button className="nav-btn is-strong" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>}
+        title={t('ph.new')}
+        left={
+          <button className="nav-btn" onClick={() => setPending(null)} disabled={busy}>
+            {t('common.cancel')}
+          </button>
+        }
+        right={
+          <button className="nav-btn is-strong" onClick={save} disabled={busy}>
+            {busy ? t('ph.saving') : t('common.save')}
+          </button>
+        }
       >
-        {pendingUrl && <img src={pendingUrl} alt="Preview" className="photo-preview" />}
+        {pendingUrl && <img src={pendingUrl} alt={t('ph.preview')} className="photo-preview" />}
         <div className="field">
-          <span>Pose</span>
-          <Segmented value={pose} onChange={setPose} options={POSES} />
+          <span>{t('ph.pose')}</span>
+          <Segmented value={pose} onChange={setPose} options={poses} />
         </div>
         <label className="field">
-          <span>Date</span>
+          <span>{t('common.date')}</span>
           <input className="input" type="date" value={date} max={toLocalDate()} onChange={(e) => setDate(e.target.value)} />
         </label>
       </Sheet>
@@ -188,13 +199,23 @@ export function PhotosTab() {
         onClose={() => setViewing(null)}
         full
         title={viewing ? formatLongDate(viewing.date) : ''}
-        left={viewing ? <button className="nav-btn" onClick={() => del(viewing)} aria-label="Delete photo"><Icon name="trash" /></button> : null}
-        right={<button className="nav-btn is-strong" onClick={() => setViewing(null)}>Done</button>}
+        left={
+          viewing ? (
+            <button className="nav-btn" onClick={() => del(viewing)} aria-label={t('ph.deleteAria')}>
+              <Icon name="trash" />
+            </button>
+          ) : null
+        }
+        right={
+          <button className="nav-btn is-strong" onClick={() => setViewing(null)}>
+            {t('common.done')}
+          </button>
+        }
       >
         {viewing && (
           <div className="photo-view">
-            <PhotoImg id={viewing.id} alt="Progress photo" className="photo-full" />
-            <span className="badge badge-muted">{POSES.find((p) => p.value === viewing.pose)?.label}</span>
+            <PhotoImg id={viewing.id} alt={t('ph.photoAlt')} className="photo-full" />
+            <span className="badge badge-muted">{poseLabel(viewing.pose)}</span>
           </div>
         )}
       </Sheet>
@@ -204,8 +225,12 @@ export function PhotosTab() {
         open={!comparePick && !!compare && compare.length === 2}
         onClose={() => setCompare(null)}
         full
-        title="Compare"
-        right={<button className="nav-btn is-strong" onClick={() => setCompare(null)}>Done</button>}
+        title={t('ph.compare')}
+        right={
+          <button className="nav-btn is-strong" onClick={() => setCompare(null)}>
+            {t('common.done')}
+          </button>
+        }
       >
         {compare?.length === 2 && <CompareView ids={compare} />}
       </Sheet>
@@ -225,15 +250,15 @@ function CompareView({ ids }: { ids: string[] }) {
       <div className="compare">
         {pair.map((p, i) => (
           <figure key={p.id}>
-            <PhotoImg id={p.id} alt={i === 0 ? 'Before' : 'After'} className="photo-full" />
+            <PhotoImg id={p.id} alt={i === 0 ? t('ph.before') : t('ph.after')} className="photo-full" />
             <figcaption>
-              <strong>{i === 0 ? 'Before' : 'After'}</strong>
+              <strong>{i === 0 ? t('ph.before') : t('ph.after')}</strong>
               <span>{formatLongDate(p.date)}</span>
             </figcaption>
           </figure>
         ))}
       </div>
-      <p className="compare-gap num">{days} day{days === 1 ? '' : 's'} apart</p>
+      <p className="compare-gap num">{t('n.daysApart', { n: days })}</p>
     </>
   );
 }

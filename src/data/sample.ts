@@ -6,7 +6,9 @@ import { addDays, startOfDay, toLocalDate, weekdayIndex } from '@/domain/dates';
 import { uid } from '@/domain/id';
 import { parseRepTarget } from '@/domain/workoutOps';
 import type { BodyWeightEntry, MeasurementEntry, Routine, Settings, SetLog, Split, Workout } from '@/domain/types';
+import { t } from '@/i18n';
 import { EXERCISES } from './exercises';
+import { localizePreset } from './localize';
 import { SPLIT_PRESETS } from './templates';
 import type { BackupData } from '@/lib/backup';
 
@@ -31,7 +33,7 @@ const round25 = (n: number) => Math.round(n / 2.5) * 2.5;
 
 export function generateSample(settings: Settings, now = new Date(), weeks = 10): BackupData {
   const rand = rng(42);
-  const preset = SPLIT_PRESETS[0];
+  const preset = localizePreset(SPLIT_PRESETS[0]);
   const kind = (id: string) => EXERCISES.find((e) => e.id === id)?.kind ?? 'weight';
 
   const keyToRoutine = new Map<string, Routine>();
@@ -111,7 +113,7 @@ export function generateSample(settings: Settings, now = new Date(), weeks = 10)
   }
 
   return {
-    settings: { ...settings, name: settings.name || 'Alex', activeSplitId: split.id, goalWeight: settings.goalWeight ?? 80, createdAt: created },
+    settings: { ...settings, name: settings.name || t('sample.name'), activeSplitId: split.id, goalWeight: settings.goalWeight ?? 80, createdAt: created },
     workouts,
     routines: [...keyToRoutine.values()],
     splits: [split],

@@ -37,6 +37,7 @@ export function defaultSettings(): Settings {
     name: '',
     units: 'metric',
     theme: 'dark',
+    language: 'en',
     weeklyGoal: 4,
     defaultRestSec: 90,
     restSound: true,

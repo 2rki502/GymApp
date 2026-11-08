@@ -10,6 +10,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "icons": "node scripts/gen-icons.mjs",
+    "deploy": "node scripts/deploy.mjs",
     "e2e": "node scripts/e2e.mjs http://localhost:4173 e2e-shots --offline",
     "e2e:webkit": "node scripts/e2e.mjs http://localhost:4173 e2e-shots-webkit --webkit"
   },

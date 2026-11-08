@@ -6,7 +6,10 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
-const BASE = args[0] ?? 'http://localhost:5173';
+// Always use a trailing-slash root: under a sub-path (/GymApp/) the slash-less URL is
+// outside the service worker's scope.
+const BASE = (args[0] ?? 'http://localhost:5173').replace(/\/+$/, '');
+const ROOT = `${BASE}/`;
 const SHOTS = args[1] ?? 'e2e-shots';
 mkdirSync(SHOTS, { recursive: true });
 
@@ -66,9 +69,9 @@ const confirmAlert = (label) => page.locator('.alert-actions').getByRole('button
 const wait = (ms) => page.waitForTimeout(ms);
 
 // Warm-up load (the dev server may optimise deps and reload once), then start clean.
-await page.goto(BASE);
+await page.goto(ROOT);
 await wait(2500);
-await page.goto(BASE);
+await page.goto(ROOT);
 await page.evaluate(() => localStorage.clear());
 await page.goto(`${BASE}/?fresh=1`);
 
@@ -211,8 +214,10 @@ await check('progress overview / body / strength render charts', async () => {
 });
 
 await check('live session shows previous hints and a PR badge', async () => {
-  await tab('Home');
-  await page.getByRole('button', { name: /Start Workout/ }).click();
+  // Start from a routine (works on any weekday; Home may show a rest day).
+  await tab('Workouts');
+  await page.getByRole('tab', { name: 'Routines' }).click();
+  await page.locator('.routine-card').first().getByRole('button', { name: /Start/ }).click();
   await page.locator('.session').waitFor();
   const block = page.locator('.ex-block').first();
   const prev = await block.locator('.set-prev').first().innerText();
@@ -337,9 +342,12 @@ await check('library animation is drawn', async () => {
 // Only meaningful against a production build (service worker is disabled in dev).
 if (process.env.E2E_OFFLINE || process.argv.includes('--offline')) {
   await check('works offline after first load (service worker)', async () => {
-    await page.goto(BASE);
-    await page.evaluate(() => navigator.serviceWorker.ready);
-    await page.goto(BASE); // now controlled by the SW, assets cached
+    await page.goto(ROOT);
+    const ready = await page.evaluate(() =>
+      Promise.race([navigator.serviceWorker.ready.then(() => true), new Promise((r) => setTimeout(() => r(false), 10_000))]),
+    );
+    if (!ready) throw new Error('service worker never became ready');
+    await page.goto(ROOT); // now controlled by the SW, assets cached
     await wait(800);
     await ctx.setOffline(true);
     await page.goto(`${BASE}/#/library`);

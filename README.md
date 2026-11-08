@@ -15,6 +15,9 @@ npm run e2e        # end-to-end flows at iPhone size (needs `npm run preview` ru
 npm run e2e:webkit # same flows on WebKit (one-off: npx playwright-core install webkit)
 ```
 
+`npm run deploy` builds the app and publishes it to the `gh-pages` branch, which GitHub Pages serves.
+The build uses relative paths, so it works at any URL (for example `https://<user>.github.io/GymApp/`).
+
 To try it on an iPhone, deploy `dist/` to any static HTTPS host (Netlify, Vercel, Cloudflare Pages,
 GitHub Pages…), open it in Safari, then **Share → Add to Home Screen**. Service workers need HTTPS
 (localhost is the only exception).

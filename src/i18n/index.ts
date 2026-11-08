@@ -19,6 +19,14 @@ function rules(lang: Lang): Intl.PluralRules {
 type Vars = Record<string, string | number>;
 
 /**
+ * Remove Arabic diacritics (tashkeel). The beIN Normal UI font has no mark
+ * positioning, so harakat render detached; undiacritised text is also the norm in
+ * Arabic interfaces. Source strings keep their marks — only display output is cleaned.
+ */
+const TASHKEEL = /[ً-ْٰ]/g;
+export const plainArabic = (s: string) => (getLang() === 'ar' ? s.replace(TASHKEEL, '') : s);
+
+/**
  * Translate a key in the current language. Plural entries pick their form from
  * `vars.n` via Intl.PluralRules (Arabic has zero/one/two/few/many/other).
  */
@@ -32,6 +40,7 @@ export function t(key: Key, vars?: Vars): string {
     const p = entry as Plural;
     s = p[rules(lang).select(n)] ?? p.other;
   }
+  if (lang === 'ar') s = s.replace(TASHKEEL, '');
   if (!vars) return s;
   return s.replace(/\{(\w+)\}/g, (m, k: string) => (vars[k] !== undefined ? String(vars[k]) : m));
 }

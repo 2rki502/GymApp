@@ -5,6 +5,16 @@
  */
 
 /* ─── Arabic typography ────────────────────────────────────────────────────── */
+/* beIN Normal, bundled. unicode-range = Arabic blocks only, so the file is fetched
+   only when Arabic text is on screen and Latin text keeps the system font. */
+@font-face {
+  font-family: 'beIN Normal';
+  src: url('../assets/fonts/beIN-Normal.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2066-2069;
+}
 :root[lang='ar'] {
   --font-arabic: 'beIN Normal', 'beIN', 'SF Arabic', 'Geeza Pro', 'Noto Kufi Arabic', 'Segoe UI', Tahoma, system-ui, sans-serif;
   --font: var(--font-arabic);

@@ -30,7 +30,19 @@ describe('dictionaries', () => {
     expect(t('n.sets', { n: 2 })).toBe('مجموعتان');
     expect(t('n.sets', { n: 5 })).toBe('5 مجموعات');
     expect(t('n.sets', { n: 12 })).toBe('12 مجموعة');
-    expect(t('n.exercises', { n: 11 })).toBe('11 تمرينًا');
+    expect(t('n.exercises', { n: 11 })).toBe('11 تمرينا');
+  });
+
+  it('shows Arabic without diacritics (the UI font cannot position them)', () => {
+    setLang('ar');
+    const marks = /[ً-ْٰ]/;
+    for (const key of Object.keys(ar) as (keyof typeof ar)[]) {
+      for (const n of [0, 1, 2, 5, 11, 100]) expect(marks.test(t(key, { n })), key).toBe(false);
+    }
+    for (const e of EXERCISES) {
+      const loc = localizeExercise(e);
+      expect(marks.test([loc.name, ...loc.instructions, ...loc.mistakes].join(' ')), e.id).toBe(false);
+    }
   });
 
   it('interpolates and falls back to English', () => {

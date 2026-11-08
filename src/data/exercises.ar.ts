@@ -788,7 +788,7 @@ export const AR_GROUPS: Record<ExerciseGroup, string> = {
 
 export const AR_EQUIPMENT: Record<string, string> = {
   Barbell: 'بار',
-  'Flat bench': 'بنش مستوٍ',
+  'Flat bench': 'بنش مسطح',
   Dumbbells: 'دمبلات',
   'Adjustable bench': 'بنش قابل للتعديل',
   'Cable machine': 'جهاز الكيبل',

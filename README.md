@@ -51,6 +51,17 @@ Key decisions:
 - **Exercise demos** are SVG figures driven by joint-angle keyframes (`features/library/figure`).
   `debug.html` (dev server only) renders every pattern's keyframes for visual checking.
 
+## Languages
+
+English and Arabic (`src/i18n`). `en.ts` defines every key; `ar.ts` must cover all of them,
+and the tests enforce this, Arabic plural forms included. Exercise content lives in
+`src/data/exercises.ar.ts`. Arabic switches the layout to right-to-left (`src/styles/rtl.css`).
+
+Arabic text uses the beIN Normal font (`src/assets/fonts/beIN-Normal.ttf`). It is loaded only for
+Arabic characters. That font has no diacritic positioning, so Arabic UI text is shown without
+tashkeel (`plainArabic` in `src/i18n`). The font belongs to beIN Media Group, so make sure your use
+is licensed.
+
 ## Storage and adding a backend
 
 - User data persists to `localStorage` via `store/storage.ts` (schema-versioned, with a `migrate` hook).

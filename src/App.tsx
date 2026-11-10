@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { applyLanguage, setLang } from '@/i18n';
-import { useAuth } from '@/store/useAuth';
+import { AUTH_ENABLED, useAuth } from '@/store/useAuth';
 import { useData } from '@/store/useData';
 import { AuthScreen } from '@/features/auth/AuthScreen';
 import { ExerciseDetailScreen, ExercisePeekSheet } from '@/features/library/ExerciseDetail';
@@ -54,7 +54,7 @@ export function App() {
   useEffect(() => applyLanguage(lang), [lang]);
   useThemeSync();
   const signedIn = useAuth((s) => s.user !== null);
-  if (!signedIn) {
+  if (AUTH_ENABLED && !signedIn) {
     return (
       <div className="app" key={lang}>
         <AuthScreen />

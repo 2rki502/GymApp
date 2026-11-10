@@ -8,7 +8,7 @@ import { Rich } from '@/i18n/Rich';
 import { downloadJSON, makeBackup, parseBackup } from '@/lib/backup';
 import { clearPhotos } from '@/lib/photoDb';
 import { navigate } from '@/lib/router';
-import { useAuth } from '@/store/useAuth';
+import { AUTH_ENABLED, useAuth } from '@/store/useAuth';
 import { useData } from '@/store/useData';
 import { useUI } from '@/store/useUI';
 import { Group, Row, Segmented, Stepper, Toggle } from '@/ui/controls';
@@ -238,7 +238,7 @@ export function ProfileScreen() {
         <Row icon="info" iconColor="#636366" label={t('pf.version')} value="1.0.0" />
       </Group>
 
-      {user && (
+      {AUTH_ENABLED && user && (
         <Group title={t('pf.account')}>
           <Row icon="user" iconColor="#636366" label={user.name} detail={<span dir="ltr">{user.email}</span>} />
           <Row icon="logout" iconColor="#ff453a" label={t('pf.signOut')} destructive onClick={confirmSignOut} />

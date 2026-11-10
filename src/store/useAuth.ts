@@ -20,6 +20,13 @@ interface Account extends AuthUser {
   createdAt: string;
 }
 
+/**
+ * Master switch for the login requirement. While false (development phase), the app
+ * opens straight to the dashboard and the Account section in Profile is hidden.
+ * All sign-in code and saved accounts are untouched: set to true to re-enable login.
+ */
+export const AUTH_ENABLED: boolean = false;
+
 const ACCOUNTS_KEY = 'forge:accounts';
 const SESSION_KEY = 'forge:session';
 

@@ -1,0 +1,316 @@
+/* ─── Sign-in / create-account screen ─────────────────────────────────────── */
+.auth {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Soft diagonal slabs in the background */
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.auth-slab {
+  position: absolute;
+  border-radius: 64px;
+  transform: rotate(-38deg);
+  background: linear-gradient(160deg, rgba(200, 255, 61, 0.07), rgba(200, 255, 61, 0.015) 55%, transparent);
+}
+:root[data-theme='light'] .auth-slab {
+  background: linear-gradient(160deg, rgba(110, 170, 20, 0.12), rgba(110, 170, 20, 0.03) 55%, transparent);
+}
+.auth-slab.s1 {
+  width: 340px;
+  height: 520px;
+  top: -260px;
+  left: -150px;
+}
+.auth-slab.s2 {
+  width: 300px;
+  height: 640px;
+  top: 60px;
+  right: -230px;
+}
+.auth-slab.s3 {
+  width: 320px;
+  height: 520px;
+  bottom: -300px;
+  right: -60px;
+}
+
+.auth-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 440px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: calc(var(--safe-top) + 32px) calc(24px + var(--safe-right)) calc(var(--safe-bottom) + 28px) calc(24px + var(--safe-left));
+}
+
+/* Hero: wordmark at the start edge, animated figure beside it */
+.auth-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+}
+.auth-brand {
+  order: -1;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 14px;
+}
+.auth-welcome {
+  color: var(--text-2);
+  font-size: 18px;
+}
+.auth-logo {
+  font-family: var(--font-display);
+  font-size: 54px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  direction: ltr;
+}
+.auth-figure {
+  width: 150px;
+  height: 230px;
+  flex-shrink: 0;
+}
+.auth-figure .fig-ground {
+  display: none;
+}
+.auth-tagline {
+  text-align: center;
+  color: var(--text-2);
+  font-size: 15px;
+  margin: 6px 0 34px;
+}
+
+/* Form */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.auth-field {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 60px;
+  padding: 0 20px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--separator-strong);
+  transition: border-color 0.15s;
+}
+.auth-field:focus-within {
+  border-color: var(--accent-fg);
+}
+.auth-field-icon {
+  flex-shrink: 0;
+  color: var(--text-2);
+}
+.auth-field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+}
+/* Edge/IE add their own reveal button; we have ours */
+.auth-field input::-ms-reveal,
+.auth-field input::-ms-clear {
+  display: none;
+}
+.auth-field input::placeholder {
+  color: var(--text-3);
+}
+/* "dir=auto" keeps typed emails left-to-right, so line up the placeholder too */
+:root[dir='rtl'] .auth-field input:placeholder-shown {
+  text-align: right;
+}
+.auth-eye {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-inline-end: -8px;
+  color: var(--text-2);
+  background: none;
+  border: 0;
+  border-radius: 12px;
+}
+.auth-eye:active {
+  background: var(--fill-soft);
+}
+
+.auth-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+}
+.auth-remember {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  color: var(--text);
+  cursor: pointer;
+}
+.auth-remember input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.auth-radio {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--text-3);
+  display: grid;
+  place-items: center;
+  transition: border-color 0.15s;
+}
+.auth-radio::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: scale(0);
+  transition: transform 0.15s var(--ease-out);
+}
+.auth-remember input:checked + .auth-radio {
+  border-color: var(--accent);
+}
+.auth-remember input:checked + .auth-radio::after {
+  transform: scale(1);
+}
+.auth-remember input:focus-visible + .auth-radio {
+  outline: 2px solid var(--accent-fg);
+  outline-offset: 2px;
+}
+
+.auth-link {
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  color: var(--accent-fg);
+  font: inherit;
+  font-size: 16px;
+}
+.auth-link.is-underlined {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.auth-error {
+  color: var(--red);
+  font-size: 15px;
+  text-align: center;
+}
+
+.auth-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 58px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  transition: transform 0.12s, opacity 0.12s;
+}
+.auth-submit:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+.auth-submit:disabled {
+  opacity: 0.6;
+}
+
+.auth-or {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 26px 0;
+  color: var(--text-2);
+  font-size: 17px;
+}
+.auth-or::before,
+.auth-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--separator-strong);
+}
+
+.auth-google {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 58px;
+  padding: 0 64px;
+  border-radius: 22px;
+  background: transparent;
+  border: 1px solid var(--separator-strong);
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+}
+.auth-google:active {
+  background: var(--fill-soft);
+}
+.auth-google-g {
+  position: absolute;
+  inset-inline-start: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.auth-switch {
+  margin: 32px 0 auto;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 16px;
+}
+
+@media (max-height: 700px) {
+  .auth-figure {
+    width: 120px;
+    height: 170px;
+  }
+  .auth-logo {
+    font-size: 46px;
+  }
+  .auth-tagline {
+    margin-bottom: 22px;
+  }
+}

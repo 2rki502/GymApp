@@ -1,6 +1,8 @@
 import { useEffect, type ReactNode } from 'react';
 import { applyLanguage, setLang } from '@/i18n';
+import { useAuth } from '@/store/useAuth';
 import { useData } from '@/store/useData';
+import { AuthScreen } from '@/features/auth/AuthScreen';
 import { ExerciseDetailScreen, ExercisePeekSheet } from '@/features/library/ExerciseDetail';
 import { LibraryScreen } from '@/features/library/Library';
 import { TemplateDetailScreen } from '@/features/library/TemplateDetail';
@@ -51,6 +53,15 @@ export function App() {
   setLang(lang);
   useEffect(() => applyLanguage(lang), [lang]);
   useThemeSync();
+  const signedIn = useAuth((s) => s.user !== null);
+  if (!signedIn) {
+    return (
+      <div className="app" key={lang}>
+        <AuthScreen />
+        <DialogHost />
+      </div>
+    );
+  }
   return (
     <div className="app" key={lang}>
       <div key={path} className={`page page-${direction}`}>

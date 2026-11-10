@@ -34,7 +34,8 @@ src/
   lib/         Router (hash-based, iOS tab stacks), IndexedDB photo storage, audio/haptics, backups.
   ui/          Reusable components: Screen (collapsing large title), Sheet, dialogs, charts, controls, icons.
   features/    Screens: home, workouts, session (live logger), workout (shared set editor),
-               progress, library (+ animated exercise figures), profile, exercises (picker).
+               progress, library (+ animated exercise figures), profile, exercises (picker),
+               nutrition (onboarding, targets dashboard, food log).
 ```
 
 Key decisions:
@@ -50,6 +51,24 @@ Key decisions:
   so a reload or iOS killing the app never loses a workout.
 - **Exercise demos** are SVG figures driven by joint-angle keyframes (`features/library/figure`).
   `debug.html` (dev server only) renders every pattern's keyframes for visual checking.
+
+## Nutrition
+
+On first launch a short questionnaire (goal, gender, age, height, weight, activity level, optional
+target weight) sets personal daily calorie and macro targets. It can be skipped and done later from
+the Home card. The Nutrition screen (Home → nutrition card, or Profile → Nutrition plan) shows the
+targets, what has been eaten, what is left, and the day's food log.
+
+- **Method** (`src/domain/nutrition.ts`): resting energy from the Mifflin-St Jeor equation, times a
+  standard activity factor (1.2 / 1.375 / 1.55 / 1.725) for maintenance calories, then a goal
+  adjustment: lose −20%, build muscle +10%, maintain 0, gain +15%.
+- **Macros:** protein from body weight (1.6–2.0 g/kg by goal), fat as 25–30% of calories,
+  carbohydrate from the remainder.
+- **Safeguards:** a deficit never goes below 1,200 kcal (women) or 1,500 kcal (men), under-18s never
+  get a deficit, and protein is capped for very high body weights.
+- **Derived, not stored:** only the answers are saved. Targets are recalculated from them and the
+  latest body-weight entry, so logging a new weight or editing the plan updates them immediately.
+- Foods are entered by hand (name, calories, macros). There is no food database or recipes.
 
 ## Languages
 

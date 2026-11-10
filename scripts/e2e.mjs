@@ -75,6 +75,59 @@ await page.goto(ROOT);
 await page.evaluate(() => localStorage.clear());
 await page.goto(`${BASE}/?fresh=1`);
 
+await check('nutrition onboarding calculates personal targets', async () => {
+  await page.getByText(/your main goal/).waitFor();
+  await shot('onboarding-goal');
+  await page.getByRole('radio', { name: /Lose Weight/ }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('radio', { name: 'Male', exact: true }).click();
+  await page.getByLabel('Age (years)').fill('30');
+  await shot('onboarding-about');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByLabel('Height (cm)').fill('180');
+  await page.getByLabel('Current weight (kg)').fill('80');
+  await shot('onboarding-body');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('radio', { name: /Moderately active/ }).click();
+  await shot('onboarding-activity');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  // Mifflin-St Jeor: 1780 kcal x 1.55 activity x 0.8 (lose) = 2,210 kcal; protein 2 g/kg = 160 g.
+  await page.locator('.targets-kcal').getByText('2,210').waitFor();
+  await page.locator('.targets-macros').getByText('160').waitFor();
+  await shot('onboarding-result');
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.locator('.kcal-big').getByText('2,210').waitFor();
+  await shot('nutrition-empty');
+});
+
+await check('log food and see consumed and remaining', async () => {
+  await page.getByRole('button', { name: 'Add Food' }).first().click();
+  await page.getByPlaceholder('e.g. Chicken and rice').fill('Chicken and rice');
+  await page.getByLabel('Protein (g)').fill('40');
+  await page.getByLabel('Carbs (g)').fill('60');
+  await page.getByLabel('Fat (g)').fill('10');
+  await shot('food-sheet');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByText('Food added').waitFor();
+  // 40x4 + 60x4 + 10x9 = 490 kcal eaten, 1,720 left.
+  await page.locator('.kcal-big').getByText('1,720').waitFor();
+  await page.getByText('120 g left').waitFor();
+  await shot('nutrition-logged');
+});
+
+await check('changing the goal recalculates targets', async () => {
+  await page.getByRole('button', { name: /Edit Plan/ }).click();
+  await page.locator('.sheet').getByRole('radio', { name: /Build Muscle/ }).click();
+  await wait(200);
+  await shot('plan-sheet');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByText('Targets updated').waitFor();
+  // 2,759 x 1.1 = 3,030 target, minus 490 eaten.
+  await page.locator('.kcal-big').getByText('2,540').waitFor();
+  await page.getByRole('button', { name: /Back to Home/ }).click();
+  await page.locator('.nut-home').getByText('2,540').waitFor();
+});
+
 await check('empty home renders welcome', async () => {
   await page.getByText('Welcome to Forge').waitFor();
   await shot('home-empty');

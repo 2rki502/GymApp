@@ -4,6 +4,8 @@ import { AUTH_ENABLED, useAuth } from '@/store/useAuth';
 import { useData } from '@/store/useData';
 import { AuthScreen } from '@/features/auth/AuthScreen';
 import { ExerciseDetailScreen, ExercisePeekSheet } from '@/features/library/ExerciseDetail';
+import { NutritionScreen } from '@/features/nutrition/NutritionScreen';
+import { Onboarding } from '@/features/nutrition/Onboarding';
 import { LibraryScreen } from '@/features/library/Library';
 import { TemplateDetailScreen } from '@/features/library/TemplateDetail';
 import { HomeScreen } from '@/features/home/Home';
@@ -25,6 +27,7 @@ type RouteDef = [pattern: string, render: (p: Record<string, string>) => ReactNo
 
 const ROUTES: RouteDef[] = [
   ['/', () => <HomeScreen />],
+  ['/nutrition', () => <NutritionScreen />],
   ['/workouts', () => <WorkoutsScreen />],
   ['/workouts/routine/:id', (p) => <RoutineEditorScreen key={p.id} id={p.id} />],
   ['/workouts/history/:id', (p) => <WorkoutDetailScreen key={p.id} id={p.id} />],
@@ -54,10 +57,20 @@ export function App() {
   useEffect(() => applyLanguage(lang), [lang]);
   useThemeSync();
   const signedIn = useAuth((s) => s.user !== null);
+  const needsOnboarding = useData((s) => s.nutrition === null && !s.nutritionSkipped);
   if (AUTH_ENABLED && !signedIn) {
     return (
       <div className="app" key={lang}>
         <AuthScreen />
+        <DialogHost />
+      </div>
+    );
+  }
+  // First run: personalise nutrition targets before entering the app (can be skipped).
+  if (needsOnboarding) {
+    return (
+      <div className="app" key={lang}>
+        <Onboarding />
         <DialogHost />
       </div>
     );

@@ -185,6 +185,17 @@ export function ProfileScreen() {
         </Row>
       </Group>
 
+      <Group title={t('nut.title')}>
+        <Row
+          icon="food"
+          iconColor="#ff9f0a"
+          label={t('pf.nutritionPlan')}
+          value={state.nutrition ? t(`goal.${state.nutrition.goal}`) : t('pf.notSet')}
+          chevron
+          onClick={() => navigate('/nutrition')}
+        />
+      </Group>
+
       <Group title={t('pf.workouts')}>
         <Row icon="timer" iconColor="#34c759" label={t('pf.defaultRest')} detail={t('pf.betweenSets')}>
           <Stepper

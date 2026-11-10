@@ -1,4 +1,6 @@
 import { t } from '@/i18n';
+import { GOALS } from '@/domain/nutrition';
+import type { NutritionProfile } from '@/domain/types';
 import { defaultSettings, SCHEMA_VERSION, type DataState } from '@/store/useData';
 
 export type BackupData = Omit<DataState, 'session' | 'rest'>;
@@ -32,7 +34,7 @@ export function parseBackup(text: string): BackupData {
     throw new Error(t('backup.newer'));
   }
   const d = raw.data;
-  const arrays = ['workouts', 'routines', 'splits', 'bodyWeights', 'measurements', 'photos', 'customExercises'] as const;
+  const arrays = ['workouts', 'routines', 'splits', 'bodyWeights', 'measurements', 'photos', 'customExercises', 'foodLog'] as const;
   for (const k of arrays) {
     if (d[k] !== undefined && !isArr(d[k])) throw new Error(t('backup.corrupt', { key: k }));
   }
@@ -52,7 +54,23 @@ export function parseBackup(text: string): BackupData {
     // Photo blobs aren't part of JSON backups; drop metadata that would point nowhere.
     photos: [],
     customExercises: (d.customExercises as BackupData['customExercises']) ?? [],
+    // Older backups have no nutrition data: the user is offered onboarding again.
+    nutrition: validProfile(d.nutrition) ? d.nutrition : null,
+    nutritionSkipped: d.nutritionSkipped === true,
+    foodLog: ((d.foodLog as unknown[] | undefined) ?? []).filter(validFood) as BackupData['foodLog'],
   };
+}
+
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
+function validProfile(v: unknown): v is NutritionProfile {
+  return isObj(v) && GOALS.includes(v.goal as NutritionProfile['goal']) && isNum(v.birthYear) && isNum(v.heightCm) && isNum(v.weightKg)
+    && (v.sex === 'male' || v.sex === 'female') && typeof v.activity === 'string';
+}
+
+function validFood(v: unknown): boolean {
+  return isObj(v) && typeof v.id === 'string' && typeof v.date === 'string' && typeof v.name === 'string'
+    && isNum(v.kcal) && isNum(v.protein) && isNum(v.carbs) && isNum(v.fat);
 }
 
 export function downloadJSON(filename: string, obj: unknown) {

@@ -146,6 +146,44 @@ export interface Settings {
   createdAt: string;
 }
 
+// ─── Nutrition ───────────────────────────────────────────────────────────────
+
+export type NutritionGoal = 'lose' | 'muscle' | 'maintain' | 'gain';
+export type Sex = 'male' | 'female';
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'very';
+
+/**
+ * What the calorie and macro targets are calculated from. Targets themselves are
+ * never stored: they are derived (see domain/nutrition.ts), so changing any answer
+ * or logging a new body weight updates them immediately.
+ */
+export interface NutritionProfile {
+  goal: NutritionGoal;
+  sex: Sex;
+  /** Stored instead of age so it stays correct over time. */
+  birthYear: number;
+  heightCm: number;
+  /** kg. Fallback only: the latest body-weight entry wins when there is one. */
+  weightKg: number;
+  activity: ActivityLevel;
+  updatedAt: string;
+}
+
+export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+export interface FoodEntry {
+  id: ID;
+  date: LocalDate;
+  meal: Meal;
+  name: string;
+  kcal: number;
+  /** grams */
+  protein: number;
+  carbs: number;
+  fat: number;
+  createdAt: string;
+}
+
 export type PRKind = 'weight' | 'e1rm' | 'reps' | 'duration';
 
 export interface PREvent {

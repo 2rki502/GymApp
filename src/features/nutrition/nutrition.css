@@ -1,0 +1,655 @@
+/* ─── Onboarding ──────────────────────────────────────────────────────────── */
+.ob {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--bg);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.ob-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: calc(var(--safe-top) + 10px) calc(20px + var(--safe-right)) calc(var(--safe-bottom) + 18px) calc(20px + var(--safe-left));
+}
+.ob-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+}
+.ob-back {
+  width: 40px;
+  height: 40px;
+  margin-inline-start: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-fg);
+}
+.ob-back:disabled {
+  visibility: hidden;
+}
+.ob-progress {
+  flex: 1;
+  display: flex;
+  gap: 5px;
+}
+.ob-progress i {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--fill-strong);
+  transition: background 0.3s;
+}
+.ob-progress i.is-on {
+  background: var(--accent-fg);
+}
+.ob-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 11px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+.ob-body {
+  flex: 1;
+  padding-top: 22px;
+  animation: ob-in 0.35s var(--ease-out);
+}
+@keyframes ob-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.ob-step {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-fg);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ob-body h1 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-top: 6px;
+}
+.ob-sub {
+  color: var(--text-2);
+  font-size: 16px;
+  margin: 8px 0 22px;
+}
+.ob-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ob-tip,
+.nut-tip {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14.5px;
+  color: var(--text-2);
+  margin-top: 14px;
+  padding: 0 4px;
+}
+.ob-tip svg,
+.nut-tip svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent-fg);
+}
+.ob-note {
+  font-size: 13px;
+  color: var(--text-3);
+  margin-top: 12px;
+  padding: 0 4px;
+}
+.ob-foot {
+  position: sticky;
+  bottom: 0;
+  padding-top: 16px;
+  margin-top: 18px;
+  background: linear-gradient(to top, var(--bg) 70%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.ob-skip {
+  height: 40px;
+  padding: 0 16px;
+  color: var(--text-2);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* ─── Choice cards (goal, activity) ───────────────────────────────────────── */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1.5px solid transparent;
+  text-align: start;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s var(--ease-out);
+}
+.sheet .choice {
+  background: var(--surface-2);
+}
+.sheet .choice.is-on {
+  background: var(--accent-soft);
+}
+.choice:active {
+  transform: scale(0.985);
+}
+.choice.is-on {
+  border-color: var(--accent-fg);
+  background: var(--accent-soft);
+}
+.choice-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--surface-3);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+.choice.is-on .choice-icon {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.choice-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.choice-main strong {
+  font-size: 17px;
+  font-weight: 600;
+}
+.choice-main span {
+  font-size: 14px;
+  color: var(--text-2);
+}
+.choice-check {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--separator-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.choice.is-on .choice-check {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ─── Number fields ───────────────────────────────────────────────────────── */
+.numfield {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.numfield-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 4px;
+}
+.numfield-label em {
+  font-style: normal;
+  color: var(--text-3);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.numfield-box {
+  display: flex;
+  align-items: center;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid transparent;
+  padding: 0 14px;
+  transition: border-color 0.2s;
+}
+.sheet .numfield-box {
+  background: var(--surface-2);
+}
+.numfield-box:focus-within {
+  border-color: var(--accent-fg);
+}
+.numfield-box input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: start;
+}
+:root[dir='rtl'] .numfield-box input {
+  text-align: right;
+}
+.numfield-box input:focus-visible {
+  outline: none;
+}
+.numfield-box input::placeholder {
+  color: var(--text-3);
+  font-weight: 500;
+}
+.numfield-box i {
+  flex: none;
+  font-style: normal;
+  font-size: 15px;
+  color: var(--text-2);
+  margin-inline-start: 8px;
+}
+.numfield-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.pillpair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.pillpair button {
+  height: 52px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1.5px solid transparent;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-2);
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.sheet .pillpair button {
+  background: var(--surface-2);
+}
+.pillpair button.is-on {
+  border-color: var(--accent-fg);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+/* ─── Target summary (onboarding result, plan preview) ────────────────────── */
+.targets-kcal {
+  background: linear-gradient(160deg, var(--accent-soft), transparent 70%), var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  text-align: center;
+}
+.sheet .targets-kcal {
+  background: linear-gradient(160deg, var(--accent-soft), transparent 70%), var(--surface-2);
+}
+.targets-kcal strong {
+  display: block;
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+.targets-kcal small {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-inline-start: 6px;
+}
+.targets-kcal p {
+  font-size: 14.5px;
+  color: var(--text-2);
+  margin-top: 6px;
+}
+.targets-macros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+.targets-macros > div {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px;
+  min-width: 0;
+}
+.sheet .targets-macros > div {
+  background: var(--surface-2);
+}
+.targets-macros i {
+  display: block;
+  width: 22px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--c);
+  margin-bottom: 8px;
+}
+.targets-macros span {
+  display: block;
+  font-size: 13px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.targets-macros strong {
+  font-size: 24px;
+  font-weight: 700;
+}
+.targets-macros small {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-inline-start: 3px;
+}
+
+/* ─── Dashboard ───────────────────────────────────────────────────────────── */
+.daynav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 12px;
+}
+.daynav strong {
+  font-size: 17px;
+  font-weight: 600;
+}
+.daynav .icon-btn:disabled {
+  opacity: 0.3;
+}
+.kcal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 16px;
+}
+.kcal-goal {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.goal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+  font-size: 14px;
+  font-weight: 600;
+}
+.kcal-goal p {
+  font-size: 14px;
+  color: var(--text-2);
+  margin-top: 8px;
+}
+.kcal-big {
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1;
+}
+.kcal-unit {
+  font-size: 14px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+.tone-over .kcal-big,
+.tone-over .kcal-unit {
+  color: var(--red);
+}
+.kcal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  margin-top: 18px;
+  text-align: center;
+}
+.kcal-stats > div + div {
+  border-inline-start: 1px solid var(--separator);
+}
+.kcal-stats label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.kcal-stats span {
+  font-size: 21px;
+  font-weight: 700;
+}
+.kcal-stats .is-over span {
+  color: var(--red);
+}
+.macro-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.macro-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.macro-name {
+  font-weight: 600;
+  font-size: 16px;
+}
+.macro-nums {
+  font-size: 15px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.macro-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--fill-soft);
+  overflow: hidden;
+  margin-top: 6px;
+}
+.macro-track i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--c);
+  transition: width 0.6s var(--ease-out);
+}
+.macro-foot {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: 5px;
+}
+.macro-foot.is-over {
+  color: var(--orange);
+}
+.macro.is-compact .macro-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.macro.is-compact .macro-nums {
+  font-size: 12.5px;
+}
+.macro.is-compact .macro-track {
+  height: 5px;
+  margin-top: 3px;
+}
+.nut-tip {
+  margin: 12px 0 0;
+}
+.food-empty {
+  text-align: center;
+  padding: 22px 16px;
+}
+.food-empty p {
+  font-size: 14.5px;
+  color: var(--text-2);
+  margin: 4px 0 14px;
+}
+/* Let the macro line wrap instead of truncating (long labels in Arabic). */
+.row-detail:has(.food-macros) {
+  white-space: normal;
+}
+.meal-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.meal-title .num {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ─── Home card ───────────────────────────────────────────────────────────── */
+.nut-home {
+  display: flex !important;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  text-align: start;
+}
+.nut-home-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.nut-home .eyebrow {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nut-home-setup .nut-home-main {
+  gap: 2px;
+}
+.nut-home-setup .muted {
+  font-size: 14px;
+}
+.nut-home-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Food and plan sheets ────────────────────────────────────────────────── */
+.food-name {
+  margin-top: 4px;
+}
+.food-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 10px;
+  margin-top: 16px;
+}
+.food-hint {
+  font-size: 13px;
+  color: var(--text-3);
+  margin-top: 10px;
+  padding: 0 4px;
+}
+.food-recent-title,
+.plan-section,
+.plan-preview-title {
+  font-size: 13px;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 4px;
+  margin: 20px 0 8px;
+}
+.plan-preview-title {
+  margin-top: 4px;
+}
+.food-recent {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.food-recent button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 8px 14px;
+  text-align: start;
+  font-size: 16px;
+}
+.food-recent button + button {
+  border-top: 1px solid var(--separator);
+}
+.food-recent button:active {
+  background: var(--surface-3);
+}
+.food-recent span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.food-recent .num {
+  flex: none;
+  font-size: 14px;
+}
+.food-delete {
+  margin-top: 20px;
+}
+.plan-error {
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 16px;
+  color: var(--text-2);
+  font-size: 15px;
+  text-align: center;
+}

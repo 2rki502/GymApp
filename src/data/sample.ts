@@ -10,7 +10,7 @@ import { t } from '@/i18n';
 import { EXERCISES } from './exercises';
 import { localizePreset } from './localize';
 import { SPLIT_PRESETS } from './templates';
-import type { BackupData } from '@/lib/backup';
+import type { ReplaceData } from '@/store/useData';
 
 function rng(seed: number) {
   return () => {
@@ -31,7 +31,7 @@ const START: Record<string, number> = {
 
 const round25 = (n: number) => Math.round(n / 2.5) * 2.5;
 
-export function generateSample(settings: Settings, now = new Date(), weeks = 10): BackupData {
+export function generateSample(settings: Settings, now = new Date(), weeks = 10): ReplaceData {
   const rand = rng(42);
   const preset = localizePreset(SPLIT_PRESETS[0]);
   const kind = (id: string) => EXERCISES.find((e) => e.id === id)?.kind ?? 'weight';

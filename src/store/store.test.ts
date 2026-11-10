@@ -97,6 +97,41 @@ describe('backup', () => {
   });
 });
 
+describe('nutrition', () => {
+  const plan = { goal: 'lose', sex: 'male', birthYear: 1996, heightCm: 180, weightKg: 80, activity: 'moderate' } as const;
+  const food = { id: 'f1', date: '2026-11-10', meal: 'lunch', name: 'Rice', kcal: 200, protein: 4, carbs: 44, fat: 1, createdAt: '2026-11-10T12:00:00Z' } as const;
+
+  it('saves the plan and food entries, and edits replace them', () => {
+    expect(S().nutrition).toBeNull();
+    S().skipNutrition(true);
+    S().saveNutrition(plan);
+    expect(S().nutrition?.goal).toBe('lose');
+    expect(S().nutritionSkipped).toBe(false);
+    S().saveFood(food);
+    S().saveFood({ ...food, kcal: 250 });
+    expect(S().foodLog).toHaveLength(1);
+    expect(S().foodLog[0].kcal).toBe(250);
+    S().deleteFood('f1');
+    expect(S().foodLog).toHaveLength(0);
+  });
+
+  it('survives loading sample data and round-trips through a backup', () => {
+    S().saveNutrition(plan);
+    S().saveFood(food);
+    S().replaceAll(generateSample(defaultSettings(), new Date(2026, 10, 7)));
+    expect(S().nutrition?.goal).toBe('lose');
+    const parsed = parseBackup(JSON.stringify(makeBackup(S())));
+    expect(parsed.nutrition?.heightCm).toBe(180);
+    expect(parsed.foodLog).toHaveLength(1);
+  });
+
+  it('treats backups without nutrition data as not set up', () => {
+    const parsed = parseBackup('{"app":"forge","version":1,"data":{"nutrition":{"goal":"x"},"foodLog":[{"id":1}]}}');
+    expect(parsed.nutrition).toBeNull();
+    expect(parsed.foodLog).toEqual([]);
+  });
+});
+
 describe('sample data', () => {
   it('produces progressive history with PRs', () => {
     const data = generateSample(defaultSettings(), new Date(2026, 10, 7));

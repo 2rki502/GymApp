@@ -4,12 +4,15 @@ import {
   addDays, formatDuration, formatFullDate, formatShortDate, greeting, parseLocalDate, startOfDay, startOfWeek, toLocalDate, weekdayLetter,
 } from '@/domain/dates';
 import { workoutDurationSec, workoutSetCount } from '@/domain/metrics';
+import { entriesOn, sumIntake } from '@/domain/nutrition';
 import { activeDays, comparePeriod, weeklyBuckets, weeklyStreak } from '@/domain/stats';
 import { fmtNumber, toDisplayWeight, weightUnit } from '@/domain/units';
 import { startEmptyWorkout, startRoutine } from '@/features/session/actions';
 import { prLabel } from '@/features/session/Session';
 import { formatPR } from '@/features/progress/ProgressScreen';
 import { WeightSheet } from '@/features/progress/BodyTab';
+import { calorieTone, TONE_COLOR } from '@/features/nutrition/NutritionScreen';
+import { MACROS, MacroBar, useTargets } from '@/features/nutrition/parts';
 import { ExerciseAnimation } from '@/features/library/figure/Figure';
 import { signed, t } from '@/i18n';
 import { navigate } from '@/lib/router';
@@ -43,6 +46,7 @@ export function HomeScreen() {
     >
       {!hasHistory && routines.length === 0 && <Welcome />}
       <TodayCard />
+      <NutritionCard />
       <WeekCard />
       <div className="home-tiles">
         <BodyWeightTile />
@@ -181,6 +185,52 @@ function TodayCard() {
         </button>
       </div>
     </div>
+  );
+}
+
+function NutritionCard() {
+  const profile = useData((s) => s.nutrition);
+  const foodLog = useData((s) => s.foodLog);
+  const targets = useTargets();
+  const eaten = useMemo(() => sumIntake(entriesOn(foodLog, toLocalDate())), [foodLog]);
+
+  if (!profile || !targets) {
+    return (
+      <button className="card card-tappable nut-home nut-home-setup" onClick={() => navigate('/nutrition')}>
+        <span className="nut-home-icon">
+          <Icon name="food" size={22} />
+        </span>
+        <span className="nut-home-main">
+          <strong>{t('nut.setupTitle')}</strong>
+          <span className="muted">{t('nut.setupText')}</span>
+        </span>
+        <Icon name="chevronRight" size={18} stroke={2.4} className="faint" />
+      </button>
+    );
+  }
+  const remaining = targets.calories - eaten.kcal;
+  const tone = calorieTone(profile.goal, eaten.kcal, targets.calories);
+  return (
+    <button className="card card-tappable nut-home" onClick={() => navigate('/nutrition')}>
+      <Ring
+        value={eaten.kcal / targets.calories}
+        size={92}
+        stroke={9}
+        color={TONE_COLOR[tone]}
+        label={t('nut.ringAria', { consumed: fmtNumber(eaten.kcal, 0), target: fmtNumber(targets.calories, 0) })}
+      >
+        <strong className="num ring-num">{fmtNumber(Math.abs(remaining), 0)}</strong>
+        <span className="ring-of">{t(remaining < 0 ? 'nut.kcalOver' : 'nut.kcalLeft')}</span>
+      </Ring>
+      <div className="nut-home-main">
+        <div className="eyebrow">
+          {t('nut.homeEyebrow')} · {t(`goal.${profile.goal}`)}
+        </div>
+        {MACROS.map((m) => (
+          <MacroBar key={m.key} compact label={t(m.label)} color={m.color} value={eaten[m.key]} target={targets[m.key]} />
+        ))}
+      </div>
+    </button>
   );
 }
 

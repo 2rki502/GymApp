@@ -4,7 +4,7 @@ import { toLocalDate } from '@/domain/dates';
 import { uid } from '@/domain/id';
 import { finalizeWorkout } from '@/domain/workoutOps';
 import type {
-  BodyWeightEntry, Exercise, ID, MeasurementEntry, ProgressPhotoMeta, Routine, Settings, Split, Workout,
+  BodyWeightEntry, Exercise, FoodEntry, ID, MeasurementEntry, NutritionProfile, ProgressPhotoMeta, Routine, Settings, Split, Workout,
 } from '@/domain/types';
 import type { RoutineTemplate, SplitPreset } from '@/data/templates';
 import { safeStorage } from './storage';
@@ -25,6 +25,11 @@ export interface DataState {
   measurements: MeasurementEntry[];
   photos: ProgressPhotoMeta[];
   customExercises: Exercise[];
+  /** Answers from nutrition onboarding; null until completed. */
+  nutrition: NutritionProfile | null;
+  /** True when the user chose to skip nutrition onboarding. */
+  nutritionSkipped: boolean;
+  foodLog: FoodEntry[];
   session: Workout | null;
   rest: RestTimer | null;
 }
@@ -57,6 +62,9 @@ export function emptyData(): DataState {
     measurements: [],
     photos: [],
     customExercises: [],
+    nutrition: null,
+    nutritionSkipped: false,
+    foodLog: [],
     session: null,
     rest: null,
   };
@@ -102,10 +110,20 @@ interface Actions {
   saveCustomExercise: (e: Exercise) => void;
   deleteCustomExercise: (id: ID) => boolean;
 
+  // nutrition
+  saveNutrition: (p: Omit<NutritionProfile, 'updatedAt'>) => void;
+  skipNutrition: (skipped: boolean) => void;
+  saveFood: (e: FoodEntry) => void;
+  deleteFood: (id: ID) => void;
+
   // whole-dataset
-  replaceAll: (data: Omit<DataState, 'session' | 'rest'>) => void;
+  replaceAll: (data: ReplaceData) => void;
   resetAll: () => void;
 }
+
+type NutritionKeys = 'nutrition' | 'nutritionSkipped' | 'foodLog';
+/** Nutrition fields are optional: when omitted (e.g. sample data) the current ones are kept. */
+export type ReplaceData = Omit<DataState, 'session' | 'rest' | NutritionKeys> & Partial<Pick<DataState, NutritionKeys>>;
 
 export type Store = DataState & Actions;
 
@@ -249,6 +267,14 @@ export const useData = create<Store>()(
         return true;
       },
 
+      saveNutrition: (p) => set({ nutrition: { ...p, updatedAt: now() }, nutritionSkipped: false }),
+      skipNutrition: (skipped) => set({ nutritionSkipped: skipped }),
+      saveFood: (e) =>
+        set((s) => ({
+          foodLog: s.foodLog.some((x) => x.id === e.id) ? s.foodLog.map((x) => (x.id === e.id ? e : x)) : [...s.foodLog, e],
+        })),
+      deleteFood: (id) => set((s) => ({ foodLog: s.foodLog.filter((e) => e.id !== id) })),
+
       replaceAll: (data) => set({ ...data, session: null, rest: null }),
       resetAll: () => set({ ...emptyData() }),
     }),
@@ -265,6 +291,9 @@ export const useData = create<Store>()(
         measurements: s.measurements,
         photos: s.photos,
         customExercises: s.customExercises,
+        nutrition: s.nutrition,
+        nutritionSkipped: s.nutritionSkipped,
+        foodLog: s.foodLog,
         session: s.session,
         rest: s.rest,
       }),

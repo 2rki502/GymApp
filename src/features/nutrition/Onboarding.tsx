@@ -50,7 +50,8 @@ export function Onboarding({ steps }: { steps: OnboardingStep[] }) {
     const preset = SPLIT_PRESETS.find((p) => p.id === presetId);
     if (steps.includes('split') && preset) useData.getState().applySplitPreset(localizePreset(preset));
     if (name === 'result' && parsed?.ok) savePlan(parsed.value);
-    navigate(steps.includes('result') ? '/nutrition' : '/');
+    // Land on Home, where today's workout from the chosen split is waiting.
+    navigate('/');
   };
 
   const title = { goal: 'ob.goalTitle', split: 'ob.splitTitle', about: 'ob.aboutTitle', body: 'ob.bodyTitle', activity: 'ob.activityTitle', result: 'ob.resultTitle' } as const;

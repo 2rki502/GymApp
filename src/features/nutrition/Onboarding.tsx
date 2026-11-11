@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
+import { localizePreset } from '@/data/localize';
+import { SPLIT_PRESETS } from '@/data/templates';
+import { weekdayLetter } from '@/domain/dates';
 import { calcTargets } from '@/domain/nutrition';
 import { t } from '@/i18n';
+import type { OnboardingStep } from '@/lib/onboarding';
 import { navigate } from '@/lib/router';
 import { useData } from '@/store/useData';
 import { Segmented } from '@/ui/controls';
@@ -10,20 +14,21 @@ import { AboutFields, ActivityPicker, BodyFields, GoalPicker, goalTip, TargetSum
 import { checkAbout, checkBody, convertDraft, initialDraft, parseDraft, savePlan, type PlanDraft } from './planForm';
 import './nutrition.css';
 
-const STEPS = ['goal', 'about', 'body', 'activity', 'result'] as const;
-
 /**
- * First-run questionnaire: goal → about you → measurements → activity → targets.
- * Shown instead of the app until it is completed or skipped.
+ * First-run questionnaire: goal → training split → about you → measurements → activity → targets.
+ * Shown instead of the app until it is complete; there is no skip, because the app is built
+ * around a plan. `steps` is only what this user still needs (e.g. just the split).
  */
-export function Onboarding() {
+export function Onboarding({ steps }: { steps: OnboardingStep[] }) {
   const units = useData((s) => s.settings.units);
   const language = useData((s) => s.settings.language);
   const updateSettings = useData((s) => s.updateSettings);
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<PlanDraft>(initialDraft);
+  const [presetId, setPresetId] = useState<string | null>(null);
   const set = (patch: Partial<PlanDraft>) => setDraft((d) => ({ ...d, ...patch }));
-  const name = STEPS[step];
+  const name = steps[Math.min(step, steps.length - 1)];
+  const isLast = step >= steps.length - 1;
 
   const parsed = useMemo(() => (name === 'result' ? parseDraft(draft, units) : null), [name, draft, units]);
   const targets = parsed?.ok ? calcTargets(parsed.value) : null;
@@ -33,19 +38,23 @@ export function Onboarding() {
     : name === 'about' ? draft.sex !== null && draft.age !== ''
     : name === 'body' ? draft.height !== '' && draft.weight !== ''
     : name === 'activity' ? draft.activity !== null
+    : name === 'split' ? presetId !== null
     : targets !== null;
 
   const next = () => {
     const check = name === 'about' ? checkAbout(draft) : name === 'body' ? checkBody(draft, units) : null;
     if (check && !check.ok) return toast(check.error, 'error');
-    if (name !== 'result') return setStep(step + 1);
-    if (!parsed?.ok) return;
-    savePlan(parsed.value);
-    navigate('/nutrition');
+    if (!isLast) return setStep(step + 1);
+    if (name === 'result' && !parsed?.ok) return;
+    // Save the split first: saving nutrition last is what lets the app open.
+    const preset = SPLIT_PRESETS.find((p) => p.id === presetId);
+    if (steps.includes('split') && preset) useData.getState().applySplitPreset(localizePreset(preset));
+    if (name === 'result' && parsed?.ok) savePlan(parsed.value);
+    navigate(steps.includes('result') ? '/nutrition' : '/');
   };
 
-  const title = { goal: 'ob.goalTitle', about: 'ob.aboutTitle', body: 'ob.bodyTitle', activity: 'ob.activityTitle', result: 'ob.resultTitle' } as const;
-  const sub = { goal: 'ob.goalSub', about: 'ob.aboutSub', body: 'ob.bodySub', activity: 'ob.activitySub', result: 'ob.resultSub' } as const;
+  const title = { goal: 'ob.goalTitle', split: 'ob.splitTitle', about: 'ob.aboutTitle', body: 'ob.bodyTitle', activity: 'ob.activityTitle', result: 'ob.resultTitle' } as const;
+  const sub = { goal: 'ob.goalSub', split: 'ob.splitSub', about: 'ob.aboutSub', body: 'ob.bodySub', activity: 'ob.activitySub', result: 'ob.resultSub' } as const;
 
   return (
     <div className="ob">
@@ -58,11 +67,11 @@ export function Onboarding() {
             className="ob-progress"
             role="progressbar"
             aria-valuemin={1}
-            aria-valuemax={STEPS.length}
+            aria-valuemax={steps.length}
             aria-valuenow={step + 1}
-            aria-label={t('ob.step', { step: step + 1, total: STEPS.length })}
+            aria-label={t('ob.step', { step: step + 1, total: steps.length })}
           >
-            {STEPS.map((s, i) => (
+            {steps.map((s, i) => (
               <i key={s} className={i <= step ? 'is-on' : ''} />
             ))}
           </div>
@@ -79,11 +88,12 @@ export function Onboarding() {
         </header>
 
         <main className="ob-body" key={name}>
-          <p className="ob-step">{t('ob.step', { step: step + 1, total: STEPS.length })}</p>
+          <p className="ob-step">{t('ob.step', { step: step + 1, total: steps.length })}</p>
           <h1>{t(title[name])}</h1>
           <p className="ob-sub">{t(sub[name])}</p>
 
           {name === 'goal' && <GoalPicker value={draft.goal} onChange={(goal) => set({ goal })} />}
+          {name === 'split' && <SplitPicker value={presetId} onChange={setPresetId} />}
           {name === 'about' && (
             <div className="ob-fields">
               <AboutFields draft={draft} set={set} />
@@ -122,15 +132,41 @@ export function Onboarding() {
 
         <footer className="ob-foot">
           <button className="btn btn-primary btn-block" disabled={!canContinue} onClick={next}>
-            {name === 'result' ? t('ob.finish') : t('ob.next')}
+            {!isLast ? t('ob.next') : name === 'result' ? t('ob.finish') : t('ob.finishSplit')}
           </button>
-          {step === 0 && (
-            <button className="ob-skip" onClick={() => useData.getState().skipNutrition(true)}>
-              {t('ob.skip')}
-            </button>
-          )}
         </footer>
       </div>
+    </div>
+  );
+}
+
+/** The training programs, each with its week at a glance (training days lit). */
+function SplitPicker({ value, onChange }: { value: string | null; onChange: (id: string) => void }) {
+  const presets = useMemo(() => SPLIT_PRESETS.map(localizePreset), []);
+  return (
+    <div className="choices" role="radiogroup" aria-label={t('ob.splitTitle')}>
+      {presets.map((p) => {
+        const on = p.id === value;
+        return (
+          <button key={p.id} type="button" role="radio" aria-checked={on} className={`choice ${on ? 'is-on' : ''}`} onClick={() => onChange(p.id)}>
+            <span className="choice-icon">
+              <Icon name="calendar" size={20} stroke={2.2} />
+            </span>
+            <span className="choice-main">
+              <strong>{p.name}</strong>
+              <span>{p.description}</span>
+              <span className="split-week" aria-hidden="true">
+                {p.days.map((d, i) => (
+                  <i key={i} className={d ? 'is-on' : ''}>
+                    {weekdayLetter(i)}
+                  </i>
+                ))}
+              </span>
+            </span>
+            <span className="choice-check">{on && <Icon name="check" size={14} stroke={3.4} />}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

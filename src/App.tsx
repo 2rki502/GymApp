@@ -1,5 +1,6 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { applyLanguage, setLang } from '@/i18n';
+import { onboardingSteps } from '@/lib/onboarding';
 import { AUTH_ENABLED, useAuth } from '@/store/useAuth';
 import { useData } from '@/store/useData';
 import { AuthScreen } from '@/features/auth/AuthScreen';
@@ -57,7 +58,10 @@ export function App() {
   useEffect(() => applyLanguage(lang), [lang]);
   useThemeSync();
   const signedIn = useAuth((s) => s.user !== null);
-  const needsOnboarding = useData((s) => s.nutrition === null && !s.nutritionSkipped);
+  const nutrition = useData((s) => s.nutrition);
+  const activeSplitId = useData((s) => s.settings.activeSplitId);
+  const splits = useData((s) => s.splits);
+  const steps = useMemo(() => onboardingSteps({ nutrition, settings: { activeSplitId }, splits }), [nutrition, activeSplitId, splits]);
   if (AUTH_ENABLED && !signedIn) {
     return (
       <div className="app" key={lang}>
@@ -66,11 +70,11 @@ export function App() {
       </div>
     );
   }
-  // First run: personalise nutrition targets before entering the app (can be skipped).
-  if (needsOnboarding) {
+  // First run: nutrition targets and a training split are both required before entering the app.
+  if (steps.length > 0) {
     return (
       <div className="app" key={lang}>
-        <Onboarding />
+        <Onboarding steps={steps} />
         <DialogHost />
       </div>
     );

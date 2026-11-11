@@ -27,11 +27,17 @@ export function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-/** Monday-based week start. */
+/**
+ * The weekday weeks begin on, as a Monday-first index: Monday (0) in English, Sunday (6)
+ * in Arabic, as across most of the Arab world. Weekly counts, streaks and the week row follow it.
+ */
+export const weekStartIndex = (): number => (getLang() === 'ar' ? 6 : 0);
+
+/** Start of the week containing `d`, in the current language's convention. */
 export function startOfWeek(d: Date): Date {
   const day = startOfDay(d);
-  const dow = (day.getDay() + 6) % 7; // Mon=0
-  return addDays(day, -dow);
+  const offset = ((day.getDay() + 6) % 7 - weekStartIndex() + 7) % 7;
+  return addDays(day, -offset);
 }
 
 export function startOfMonth(d: Date): Date {
@@ -65,7 +71,8 @@ const NAMES = {
     monthsLong: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
     days: ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'],
     daysShort: ['اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت', 'أحد'],
-    daysLetter: ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح'],
+    // Monday-first like the rest; read from Sunday this is أ ث ث ر خ ج س.
+    daysLetter: ['ث', 'ث', 'ر', 'خ', 'ج', 'س', 'أ'],
   },
 };
 const names = () => NAMES[getLang()];

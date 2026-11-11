@@ -1,4 +1,5 @@
 import type { Exercise, ExerciseGroup, ExerciseKind, LibrarySection, Muscle } from '@/domain/types';
+import { EXERCISE_VIDEOS } from './videos';
 
 type Def = [
   id: string,
@@ -23,6 +24,7 @@ const build = ([id, name, group, kind, anim, primary, secondary, equipment, [set
   group,
   kind,
   anim,
+  ...(EXERCISE_VIDEOS[id] ? { video: EXERCISE_VIDEOS[id] } : {}),
   primary,
   secondary,
   equipment,

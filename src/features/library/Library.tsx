@@ -96,7 +96,7 @@ export function LibraryScreen() {
               {items.map((e) => (
                 <button key={e.id} className="lib-card" onClick={() => navigate(`/library/exercise/${e.id}`)}>
                   <span className="lib-art">
-                    <ExerciseThumb anim={e.anim} fit="scene" />
+                    <ExerciseThumb anim={e.anim} video={e.video} fit="scene" />
                   </span>
                   <span className="lib-name">{e.name}</span>
                   <span className="lib-sub">{e.primary.slice(0, 2).map(muscleLabel).join(' · ') || groupLabel('custom')}</span>

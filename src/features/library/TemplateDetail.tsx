@@ -72,7 +72,7 @@ export function TemplateDetailScreen({ id }: { id: string }) {
           return (
             <button key={i} className="row is-tappable" onClick={() => navigate(`/library/exercise/${ex.id}`)}>
               <span className="ex-thumb ex-thumb-sm">
-                <ExerciseThumb anim={ex.anim} />
+                <ExerciseThumb anim={ex.anim} video={ex.video} />
               </span>
               <span className="row-main">
                 <span className="row-label">{ex.name}</span>

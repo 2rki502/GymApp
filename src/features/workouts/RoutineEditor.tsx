@@ -109,7 +109,7 @@ export function RoutineEditorScreen({ id }: { id: string }) {
               <div key={e.id} className="re-item">
                 <div className="re-head">
                   <span className="ex-thumb ex-thumb-sm">
-                    <ExerciseThumb anim={ex.anim} />
+                    <ExerciseThumb anim={ex.anim} video={ex.video} />
                   </span>
                   <strong>{ex.name}</strong>
                   <div className="re-tools">

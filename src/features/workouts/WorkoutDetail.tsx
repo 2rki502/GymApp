@@ -145,7 +145,7 @@ function ViewWorkout({ w, onEdit }: { w: Workout; onEdit: () => void }) {
           <section key={e.id} className="card wd-ex">
             <button className="wd-ex-head" onClick={() => navigate(`/progress/exercise/${ex.id}`)}>
               <span className="ex-thumb ex-thumb-sm">
-                <ExerciseThumb anim={ex.anim} />
+                <ExerciseThumb anim={ex.anim} video={ex.video} />
               </span>
               <strong>{ex.name}</strong>
               <Icon name="chevronRight" size={16} className="faint" />

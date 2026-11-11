@@ -23,6 +23,14 @@ export type Muscle =
   | 'forearms' | 'lats' | 'upper back' | 'traps' | 'lower back' | 'abs' | 'obliques'
   | 'quads' | 'hamstrings' | 'glutes' | 'calves' | 'adductors' | 'hip flexors' | 'cardio';
 
+export interface ExerciseVideo {
+  src: string;
+  /** still frame used as the thumbnail and before playback */
+  poster: string;
+  credit: string;
+  creditUrl: string;
+}
+
 export interface Exercise {
   id: ID;
   name: string;
@@ -34,6 +42,8 @@ export interface Exercise {
   equipment: string[];
   /** Animation pattern id (see data/animations). */
   anim?: string;
+  /** Demo video; when present it replaces the animated figure. */
+  video?: ExerciseVideo;
   instructions: string[];
   mistakes: string[];
   recommended: { sets: number; reps: string; restSec: number };

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { fmtReps } from '@/data/localize';
 import {
-  addDays, formatDuration, formatFullDate, formatShortDate, greeting, parseLocalDate, startOfDay, startOfWeek, toLocalDate, weekdayLetter,
+  addDays, formatDuration, formatFullDate, formatShortDate, greeting, parseLocalDate, startOfDay, startOfWeek, toLocalDate, weekdayIndex, weekdayLetter,
 } from '@/domain/dates';
 import { workoutDurationSec, workoutSetCount } from '@/domain/metrics';
 import { entriesOn, sumIntake } from '@/domain/nutrition';
@@ -254,11 +254,13 @@ function WeekCard() {
         <div className="eyebrow">{t('home.thisWeek')}</div>
         <div className="week-days">
           {WEEK.map((i) => {
-            const d = toLocalDate(addDays(week, i));
+            const date = addDays(week, i);
+            const d = toLocalDate(date);
             const done = days.has(d);
             return (
               <div key={i} className={`wday ${done ? 'is-done' : ''} ${d === today ? 'is-today' : ''} ${d > today ? 'is-future' : ''}`}>
-                <span>{weekdayLetter(i)}</span>
+                {/* Label by the real weekday: the week starts on Sunday in Arabic, Monday in English. */}
+                <span>{weekdayLetter(weekdayIndex(date))}</span>
                 <i>{done && <Icon name="check" size={12} stroke={3.4} />}</i>
               </div>
             );

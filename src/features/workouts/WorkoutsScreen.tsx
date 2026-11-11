@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { startOn } from '@/domain/schedule';
 import { localizePreset } from '@/data/localize';
 import { SPLIT_PRESETS } from '@/data/templates';
 import { formatDuration, formatLongDate, formatMonth, weekdayIndex, weekdayLetter, weekdayShort } from '@/domain/dates';
@@ -290,7 +291,7 @@ function SplitsTab() {
                 confirmLabel: t('wk.addProgram'),
               });
               if (ok) {
-                applySplitPreset(p);
+                applySplitPreset({ ...p, days: startOn(p.days, weekdayIndex(new Date())) });
                 toast(t('wk.nowActive', { name: p.name }), 'success');
               }
             }}
@@ -300,7 +301,7 @@ function SplitsTab() {
               <span className="muted">{p.description}</span>
             </div>
             <div className="preset-days">
-              {p.days.map((d, i) => (
+              {startOn(p.days, weekdayIndex(new Date())).map((d, i) => (
                 <span key={i} className={d ? 'is-train' : ''} title={weekdayShort(i)}>
                   {weekdayLetter(i)}
                 </span>

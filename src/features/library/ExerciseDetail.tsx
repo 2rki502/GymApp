@@ -4,7 +4,7 @@ import { formatShortDate } from '@/domain/dates';
 import { exerciseHistory } from '@/domain/metrics';
 import { addExercises } from '@/domain/workoutOps';
 import { fmtWeight } from '@/domain/units';
-import type { Exercise } from '@/domain/types';
+import type { Exercise, ExerciseVideo } from '@/domain/types';
 import { t } from '@/i18n';
 import { goBack, navigate } from '@/lib/router';
 import { useExerciseLookup, usePRs } from '@/store/selectors';
@@ -29,7 +29,7 @@ export function ExerciseGuide({ ex, compact }: { ex: Exercise; compact?: boolean
   return (
     <div className="guide">
       <div className="guide-hero">
-        <ExerciseAnimation anim={ex.anim} className="guide-anim" />
+        {ex.video ? <ExerciseVideoPlayer video={ex.video} label={ex.name} /> : <ExerciseAnimation anim={ex.anim} className="guide-anim" />}
         <div className="guide-tags">
           <span className="badge">{groupLabel(ex.group)}</span>
           {ex.equipment.slice(0, 2).map((q) => (
@@ -206,5 +206,20 @@ export function ExercisePeekSheet() {
     >
       {ex && <ExerciseGuide ex={ex} compact />}
     </Sheet>
+  );
+}
+
+/** Demo video: still frame until the user presses play; nothing downloads before that. */
+function ExerciseVideoPlayer({ video, label }: { video: ExerciseVideo; label: string }) {
+  return (
+    <figure className="guide-video">
+      <video src={video.src} poster={video.poster} controls playsInline loop preload="none" aria-label={label} />
+      <figcaption>
+        {t('ex.videoBy')}{' '}
+        <a href={video.creditUrl} target="_blank" rel="noopener noreferrer">
+          {video.credit}
+        </a>
+      </figcaption>
+    </figure>
   );
 }

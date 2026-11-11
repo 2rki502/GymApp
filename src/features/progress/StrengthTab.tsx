@@ -51,7 +51,7 @@ export function StrengthTab() {
         {items.map(({ ex, date, sessions, values, best }) => (
           <button key={ex.id} className="card card-tappable strength-item" onClick={() => navigate(`/progress/exercise/${ex.id}`)}>
             <span className="ex-thumb ex-thumb-sm">
-              <ExerciseThumb anim={ex.anim} />
+              <ExerciseThumb anim={ex.anim} video={ex.video} />
             </span>
             <span className="strength-main">
               <strong>{ex.name}</strong>

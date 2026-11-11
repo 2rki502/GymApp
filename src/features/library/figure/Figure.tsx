@@ -1,6 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { easeInOut, frontSkeleton, LEN, lerpPose, normalize, sideSkeleton, type Pose, type Pt } from './kinematics';
 import { DEFAULT_PATTERN, GROUND, PATTERNS, type HandItem, type Pattern, type Prop } from './patterns';
+import type { ExerciseVideo } from '@/domain/types';
 import './figure.css';
 
 /** Treat NaN (normalized "unset") the same as undefined. */
@@ -296,7 +297,9 @@ export function ExerciseAnimation({ anim, className }: { anim?: string; classNam
 }
 
 /** Static thumbnail at the "working" keyframe, cropped to the figure (or the scene). */
-export const ExerciseThumb = memo(function ExerciseThumb({ anim, fit = true }: { anim?: string; fit?: boolean | 'scene' }) {
+export const ExerciseThumb = memo(function ExerciseThumb({ anim, fit = true, video }: { anim?: string; fit?: boolean | 'scene'; video?: ExerciseVideo }) {
+  // A real demo video's still frame replaces the figure.
+  if (video) return <img className="ex-thumb-img" src={video.poster} alt="" loading="lazy" decoding="async" />;
   const pattern = getPattern(anim);
   return <FigureFrame pattern={pattern} pose={normalize(pattern.frames[1] ?? pattern.frames[0])} fit={fit} />;
 });

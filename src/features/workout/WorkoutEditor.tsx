@@ -210,7 +210,7 @@ const ExerciseBlock = memo(function ExerciseBlock({
       <header className="ex-head">
         <button className="ex-head-main" onClick={() => ex.instructions.length && useUI.getState().set({ peekExercise: ex.id })}>
           <span className="ex-thumb ex-thumb-sm">
-            <ExerciseThumb anim={ex.anim} />
+            <ExerciseThumb anim={ex.anim} video={ex.video} />
           </span>
           <span className="ex-title">
             <span className="ex-name">{ex.name}</span>

@@ -128,7 +128,7 @@ export function ExercisePicker({
             return (
               <button key={e.id} className={`picker-item ${idx >= 0 ? 'is-selected' : ''}`} onClick={() => toggle(e.id)}>
                 <span className="ex-thumb">
-                  <ExerciseThumb anim={e.anim} />
+                  <ExerciseThumb anim={e.anim} video={e.video} />
                 </span>
                 <span className="picker-main">
                   <span className="picker-name">{e.name}</span>

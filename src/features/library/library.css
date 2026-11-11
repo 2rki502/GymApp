@@ -294,3 +294,40 @@
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* Exercise demo video (replaces the figure when available) */
+.guide-video {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.guide-video video {
+  display: block;
+  height: min(420px, 55vh);
+  aspect-ratio: 9 / 16;
+  max-width: 100%;
+  border-radius: 14px;
+  background: #000;
+  object-fit: contain;
+}
+.guide-video figcaption {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.guide-video a {
+  color: var(--accent-fg);
+}
+.ex-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* With a video, the tags sit below it instead of over its corner (and the credit watermark). */
+.guide-hero:has(.guide-video) .guide-tags {
+  position: static;
+  justify-content: center;
+  margin: 10px 0 6px;
+}

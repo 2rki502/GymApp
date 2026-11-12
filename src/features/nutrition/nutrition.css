@@ -558,9 +558,8 @@
 }
 .nut-home .eyebrow {
   font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Wrap rather than cut the goal off ("LOSE WEI…") */
+  line-height: 1.35;
 }
 .nut-home-setup .nut-home-main {
   gap: 2px;
@@ -769,4 +768,12 @@
   margin-top: 10px;
   font-size: 14px;
   color: var(--red);
+}
+
+.nut-add {
+  margin: 12px 0;
+}
+
+.food-empty p:last-child {
+  margin-bottom: 0;
 }

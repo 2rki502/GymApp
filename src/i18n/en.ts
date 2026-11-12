@@ -39,6 +39,7 @@ export const en = {
   // plurals
   'n.sets': { one: '{n} set', other: '{n} sets' },
   'n.exercises': { one: '{n} exercise', other: '{n} exercises' },
+  'n.moreExercises': { one: '+{n} more exercise', other: '+{n} more exercises' },
   'n.workouts': { one: '{n} workout', other: '{n} workouts' },
   'n.weeks': { one: '{n} week', other: '{n} weeks' },
   'n.sessions': { one: '{n} session', other: '{n} sessions' },
@@ -78,6 +79,7 @@ export const en = {
   'tab.main': 'Main',
   'tab.home': 'Home',
   'tab.workouts': 'Workouts',
+  'tab.nutrition': 'Nutrition',
   'tab.progress': 'Progress',
   'tab.library': 'Library',
   'tab.profile': 'Profile',
@@ -188,6 +190,7 @@ export const en = {
   'editor.restAria': 'rest',
   'editor.needDuration': 'Enter a duration first',
   'editor.needReps': 'Enter your reps first',
+  'editor.needWeight': 'Add the weight you lifted for this set',
   'editor.needWeightReps': 'Enter weight and reps first',
   'editor.setsProgress': '{done}/{total} sets',
   'editor.options': '{name} options',

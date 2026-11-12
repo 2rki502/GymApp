@@ -83,7 +83,7 @@ describe('Arabic content', () => {
     const bench = EXERCISES.find((e) => e.id === 'bench-press')!;
     expect(localizeExercise(bench).name).toBe('Barbell Bench Press');
     setLang('ar');
-    expect(localizeExercise(bench).name).toBe('ضغط البنش بالبار');
+    expect(localizeExercise(bench).name).toBe('بنش برس بالبار');
     expect(localizePreset(SPLIT_PRESETS[0]).routines.map((r) => r.name)).toEqual(['دفع', 'سحب', 'أرجل']);
   });
 
@@ -97,5 +97,15 @@ describe('Arabic content', () => {
     expect(formatShortDate('2026-11-07')).toBe('7 نوفمبر');
     expect(formatDuration(3725)).toBe('1 س 2 د');
     expect(formatLongDate(new Date())).toBe('اليوم');
+  });
+});
+
+describe('"+N more exercises" in Arabic', () => {
+  it('agrees with the number', () => {
+    setLang('ar');
+    expect(t('n.moreExercises', { n: 1 })).toBe('وتمرين آخر');
+    expect(t('n.moreExercises', { n: 2 })).toBe('وتمرينان آخران');
+    expect(t('n.moreExercises', { n: 3 })).toBe('و3 تمارين أخرى');
+    expect(t('n.moreExercises', { n: 11 })).toBe('و11 تمرينا آخر');
   });
 });

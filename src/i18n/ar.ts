@@ -38,6 +38,7 @@ export const ar: Record<Key, Entry> = {
   // plurals
   'n.sets': { zero: '{n} مجموعة', one: 'مجموعة واحدة', two: 'مجموعتان', few: '{n} مجموعات', many: '{n} مجموعة', other: '{n} مجموعة' },
   'n.exercises': { zero: '{n} تمرين', one: 'تمرين واحد', two: 'تمرينان', few: '{n} تمارين', many: '{n} تمرينًا', other: '{n} تمرين' },
+  'n.moreExercises': { zero: 'و{n} تمرين آخر', one: 'وتمرين آخر', two: 'وتمرينان آخران', few: 'و{n} تمارين أخرى', many: 'و{n} تمرينًا آخر', other: 'و{n} تمرين آخر' },
   'n.workouts': { zero: '{n} حصة', one: 'حصة واحدة', two: 'حصتان', few: '{n} حصص', many: '{n} حصة', other: '{n} حصة' },
   'n.weeks': { zero: '{n} أسبوع', one: 'أسبوع واحد', two: 'أسبوعان', few: '{n} أسابيع', many: '{n} أسبوعًا', other: '{n} أسبوع' },
   'n.sessions': { zero: '{n} حصة', one: 'حصة واحدة', two: 'حصتان', few: '{n} حصص', many: '{n} حصة', other: '{n} حصة' },
@@ -98,6 +99,7 @@ export const ar: Record<Key, Entry> = {
   'tab.main': 'التنقل الرئيسي',
   'tab.home': 'الرئيسية',
   'tab.workouts': 'التدريب',
+  'tab.nutrition': 'التغذية',
   'tab.progress': 'التقدّم',
   'tab.library': 'المكتبة',
   'tab.profile': 'حسابي',
@@ -229,6 +231,7 @@ export const ar: Record<Key, Entry> = {
   'editor.restAria': 'الراحة',
   'editor.needDuration': 'أدخل المدة أولًا',
   'editor.needReps': 'أدخل عدد التكرارات أولًا',
+  'editor.needWeight': 'أدخل الوزن الذي رفعته في هذه المجموعة',
   'editor.needWeightReps': 'أدخل الوزن والتكرارات أولًا',
   'editor.setsProgress': '{done}/{total} مجموعات',
   'editor.options': 'خيارات {name}',

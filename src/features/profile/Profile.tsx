@@ -106,7 +106,7 @@ export function ProfileScreen() {
   const goalDisplay = settings.goalWeight ? fmtNumber(toDisplayWeight(settings.goalWeight, units), 1) : '';
 
   return (
-    <Screen title={t('pf.title')} large>
+    <Screen title={t('pf.title')} large back={{ label: t('tab.home'), to: '/' }}>
       <div className="profile-card">
         <div className="profile-avatar">{settings.name.trim() ? settings.name.trim()[0].toUpperCase() : <Icon name="user" size={28} />}</div>
         <input

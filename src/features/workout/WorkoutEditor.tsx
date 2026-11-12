@@ -3,7 +3,7 @@ import { formatClock } from '@/domain/dates';
 import { e1rm, previousSets, type PersonalBests } from '@/domain/metrics';
 import { fromDisplayWeight, toDisplayWeight, weightUnit } from '@/domain/units';
 import {
-  addExercises, addSet, canComplete, cycleSetType, fillFromHint, moveExercise, removeExercise, removeSet,
+  addExercises, addSet, canComplete, cycleSetType, fillFromHint, moveExercise, planHint, removeExercise, removeSet,
   replaceExercise, setRest, updateSet,
 } from '@/domain/workoutOps';
 import type { Exercise, ExerciseLog, ID, SetLog, SetType, UnitSystem, Workout } from '@/domain/types';
@@ -179,6 +179,12 @@ const ExerciseBlock = memo(function ExerciseBlock({
       setShake(s.id);
       vibrate(30);
       setTimeout(() => setShake(null), 400);
+      // Only the weight is missing (reps come from last time or the plan): say so and take them there.
+      if (kind === 'weight' && filled.weight === null && (filled.reps ?? 0) > 0) {
+        toast(t('editor.needWeight'), 'error');
+        document.getElementById(`w-${s.id}`)?.focus();
+        return;
+      }
       toast(kind === 'time' ? t('editor.needDuration') : kind === 'reps' ? t('editor.needReps') : t('editor.needWeightReps'), 'error');
       return;
     }
@@ -240,7 +246,9 @@ const ExerciseBlock = memo(function ExerciseBlock({
           {mode === 'live' && <span className="set-hdr-check"><Icon name="check" size={14} stroke={3} /></span>}
         </div>
         {log.sets.map((s, idx) => {
-          const hint = hints[idx] ?? hints[hints.length - 1];
+          // Last time's numbers; with no history yet, the plan's target reps stand in as the hint.
+          const prev = hints[idx] ?? hints[hints.length - 1];
+          const hint = prev ?? planHint(log, kind);
           const letter = TYPE_LETTER[s.type];
           const label = letter ? t(letter) : String(++normalIdx);
           const pr = isPR(s);
@@ -256,8 +264,8 @@ const ExerciseBlock = memo(function ExerciseBlock({
                 </button>
                 <button
                   className="set-prev"
-                  disabled={!hint}
-                  onClick={() => hint && onChange((w) => updateSet(w, log.id, s.id, { weight: hint.weight, reps: hint.reps, duration: hint.duration }))}
+                  disabled={!prev}
+                  onClick={() => prev && onChange((w) => updateSet(w, log.id, s.id, { weight: prev.weight, reps: prev.reps, duration: prev.duration }))}
                   aria-label={t('editor.usePrev')}
                 >
                   {pr ? (
@@ -265,15 +273,16 @@ const ExerciseBlock = memo(function ExerciseBlock({
                       <Icon name="trophy" size={12} stroke={2.4} /> {t('pr.short')}
                     </span>
                   ) : (
-                    hintText(hint)
+                    hintText(prev)
                   )}
                 </button>
                 {kind === 'weight' && (
                   <NumInput
                     className="set-input num"
+                    id={`w-${s.id}`}
                     ariaLabel={t('editor.weightAria', { label })}
                     value={s.weight === null ? null : toDisplayWeight(s.weight, units)}
-                    placeholder={hint?.weight != null ? String(Math.round(toDisplayWeight(hint.weight, units) * 10) / 10) : '0'}
+                    placeholder={hint?.weight != null ? String(Math.round(toDisplayWeight(hint.weight, units) * 10) / 10) : '–'}
                     onCommit={(v) => onChange((w) => updateSet(w, log.id, s.id, { weight: v === null ? null : fromDisplayWeight(v, units) }))}
                     max={2000}
                   />

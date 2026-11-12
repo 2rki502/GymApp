@@ -40,7 +40,12 @@ export function workoutFromRoutine(routine: Routine, kindOf: (id: ID) => Exercis
       kind === 'time'
         ? { duration: null }
         : { weight: re.weight ?? null, reps: re.weight != null && target ? target : null };
-    return newExerciseLog(re.exerciseId, re.restSec, re.sets, template);
+    const log = newExerciseLog(re.exerciseId, re.restSec, re.sets, template);
+    if (target !== null) {
+      if (kind === 'time') log.targetSec = target;
+      else log.targetReps = target;
+    }
+    return log;
   });
   return w;
 }
@@ -150,4 +155,15 @@ export function countSets(w: Workout): { done: number; total: number } {
     done += e.sets.filter((s) => s.done).length;
   }
   return { done, total };
+}
+
+/**
+ * The routine's target as a hint (reps, or seconds for timed exercises), used when there is
+ * no previous performance yet. Weight is never guessed: it must come from the lifter.
+ */
+export function planHint(log: ExerciseLog, kind: ExerciseKind): SetLog | undefined {
+  const reps = kind === 'time' ? null : log.targetReps ?? null;
+  const duration = kind === 'time' ? log.targetSec ?? null : null;
+  if (reps === null && duration === null) return undefined;
+  return { id: '', type: 'normal', weight: null, reps, duration, done: false };
 }

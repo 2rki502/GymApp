@@ -5,10 +5,14 @@
     <title>Figure debug</title>
     <style>
       body { background: #000; color: #aaa; font: 11px system-ui; margin: 8px; }
-      .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+      :root { --fig-body: #f2f2f7; --fig-equip: #c8ff3d; --fig-ground: rgba(255,255,255,.18); --fig-prop: rgba(255,255,255,.35); --fig-prop-fill: rgba(255,255,255,.1); --orange: #ff9f0a; }
+      .grid { display: grid; grid-template-columns: repeat(var(--cols, 2), 1fr); gap: 6px; }
       .cell { background: #151517; border-radius: 8px; padding: 4px; }
+      .cell.bad { outline: 2px solid #ff4f7b; }
+      .cell b { color: #fff; }
+      .issue { color: #ff8fab; }
       .row { display: flex; gap: 2px; }
-      .row > div { flex: 1; aspect-ratio: 200/160; }
+      .row > div { flex: 1; aspect-ratio: 5/4; background: #000; }
     </style>
   </head>
   <body>

@@ -459,8 +459,24 @@ await check('library animation is drawn', async () => {
   await tab('Library');
   await page.getByRole('tab', { name: 'Gym' }).click();
   await page.locator('.lib-card').nth(3).click();
-  const lines = await page.locator('.guide-anim svg line').count();
-  if (lines < 8) throw new Error(`figure has ${lines} lines`);
+  // The figure is drawn from body parts, the target muscles are tinted, and it actually moves.
+  const parts = await page.locator('.guide-anim svg .fig-part').count();
+  if (parts < 15) throw new Error(`figure has ${parts} body parts`);
+  if ((await page.locator('.guide-anim svg .fig-part.is-focus').count()) < 1) throw new Error('target muscles not highlighted');
+  const pose = () => page.locator('.guide-anim svg').innerHTML();
+  // Reduced motion (this suite's default) holds the working position…
+  const still = await pose();
+  await page.waitForTimeout(500);
+  if ((await pose()) !== still) throw new Error('figure moves despite reduced motion');
+  // …otherwise it animates.
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.reload();
+  await page.locator('.guide-anim svg .fig-part').first().waitFor();
+  const a = await pose();
+  await page.waitForTimeout(700);
+  const moved = (await pose()) !== a;
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  if (!moved) throw new Error(`${await page.locator('h1.guide-title').innerText()}: figure is not animating`);
   await shot('exercise-anim');
 });
 

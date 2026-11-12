@@ -50,7 +50,22 @@ Key decisions:
 - **Resilient sessions.** The active workout and the rest timer (stored as an end timestamp) persist,
   so a reload or iOS killing the app never loses a workout.
 - **Exercise demos** are SVG figures driven by joint-angle keyframes (`features/library/figure`).
-  `debug.html` (dev server only) renders every pattern's keyframes for visual checking.
+  Every exercise has its own animation.
+  - `patterns.ts` holds the keyframes:
+    - The spine has two segments, so crunches curl instead of hinging.
+    - Arms and thighs can point out of the picture plane (elbows flared, wide grips) and are foreshortened.
+    - `lock` keeps planted hands, feet and toes fixed with two-bone IK, so nothing slides; knees and elbows always bend the anatomical way.
+    - `track` moves the hands in a straight line, so presses go straight up.
+    - `ecc` makes the lowering phase slower than the lift.
+    - `smooth` gives cardio moves a continuous loop.
+  - `scene.ts` does the timing and placement; `Figure.tsx` draws the figure. The figure has tapered limbs and highlights the target muscles on the exercise guide. Reduced motion shows the working position.
+  - `audit.ts` (run by `audit.test.ts`) samples every animation through its whole loop and fails the build when any of these is wrong:
+    - joints leave a human range of motion
+    - a limb sinks into the floor
+    - a planted hand or foot slides
+    - a standing figure's centre of mass leaves its feet
+    - a barbell's path drifts off mid-foot
+  - `debug.html` (dev server only) shows a filmstrip of every animation with its audit result. Narrow it with `?only=deadlift,pushup`.
 
 ## Home workouts
 

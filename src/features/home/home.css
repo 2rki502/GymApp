@@ -360,3 +360,13 @@
 .quick-empty svg {
   color: var(--accent-fg);
 }
+
+/* 34px to look at, 44px to hit */
+.avatar {
+  position: relative;
+}
+.avatar::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+}

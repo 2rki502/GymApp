@@ -39,6 +39,7 @@ export const en = {
   // plurals
   'n.sets': { one: '{n} set', other: '{n} sets' },
   'n.exercises': { one: '{n} exercise', other: '{n} exercises' },
+  'n.moreExercises': { one: '+{n} more exercise', other: '+{n} more exercises' },
   'n.workouts': { one: '{n} workout', other: '{n} workouts' },
   'n.weeks': { one: '{n} week', other: '{n} weeks' },
   'n.sessions': { one: '{n} session', other: '{n} sessions' },

@@ -129,6 +129,14 @@
   background: var(--surface-2);
   color: var(--text);
   transition: transform 0.15s, background 0.15s;
+  position: relative;
+  flex: none;
+}
+/* Tap areas: same look, bigger target (44px for icon buttons). */
+.icon-btn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
 }
 .icon-btn:active {
   transform: scale(0.92);
@@ -543,6 +551,11 @@
   font-weight: 500;
   color: var(--text-2);
   transition: color 0.2s;
+}
+.segmented button::after {
+  content: '';
+  position: absolute;
+  inset: -5px 0;
 }
 .segmented button.is-active {
   color: var(--text);
@@ -1029,4 +1042,13 @@ textarea.input {
 }
 .spacer {
   height: 16px;
+}
+
+.btn-sm {
+  position: relative;
+}
+.btn-sm::after {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
 }

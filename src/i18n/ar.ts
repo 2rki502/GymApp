@@ -38,6 +38,7 @@ export const ar: Record<Key, Entry> = {
   // plurals
   'n.sets': { zero: '{n} مجموعة', one: 'مجموعة واحدة', two: 'مجموعتان', few: '{n} مجموعات', many: '{n} مجموعة', other: '{n} مجموعة' },
   'n.exercises': { zero: '{n} تمرين', one: 'تمرين واحد', two: 'تمرينان', few: '{n} تمارين', many: '{n} تمرينًا', other: '{n} تمرين' },
+  'n.moreExercises': { zero: 'و{n} تمرين آخر', one: 'وتمرين آخر', two: 'وتمرينان آخران', few: 'و{n} تمارين أخرى', many: 'و{n} تمرينًا آخر', other: 'و{n} تمرين آخر' },
   'n.workouts': { zero: '{n} حصة', one: 'حصة واحدة', two: 'حصتان', few: '{n} حصص', many: '{n} حصة', other: '{n} حصة' },
   'n.weeks': { zero: '{n} أسبوع', one: 'أسبوع واحد', two: 'أسبوعان', few: '{n} أسابيع', many: '{n} أسبوعًا', other: '{n} أسبوع' },
   'n.sessions': { zero: '{n} حصة', one: 'حصة واحدة', two: 'حصتان', few: '{n} حصص', many: '{n} حصة', other: '{n} حصة' },

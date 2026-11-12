@@ -144,7 +144,7 @@ function TodayCard() {
               </span>
             </li>
           ))}
-          {r.exercises.length > 4 && <li className="faint">{t('common.more', { n: r.exercises.length - 4 })}</li>}
+          {r.exercises.length > 4 && <li className="faint">{t('n.moreExercises', { n: r.exercises.length - 4 })}</li>}
         </ul>
         <div className="btn-row">
           <button className="btn" onClick={() => navigate(`/workouts/routine/${r.id}`)}>

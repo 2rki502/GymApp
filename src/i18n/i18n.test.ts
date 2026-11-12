@@ -99,3 +99,13 @@ describe('Arabic content', () => {
     expect(formatLongDate(new Date())).toBe('اليوم');
   });
 });
+
+describe('"+N more exercises" in Arabic', () => {
+  it('agrees with the number', () => {
+    setLang('ar');
+    expect(t('n.moreExercises', { n: 1 })).toBe('وتمرين آخر');
+    expect(t('n.moreExercises', { n: 2 })).toBe('وتمرينان آخران');
+    expect(t('n.moreExercises', { n: 3 })).toBe('و3 تمارين أخرى');
+    expect(t('n.moreExercises', { n: 11 })).toBe('و11 تمرينا آخر');
+  });
+});

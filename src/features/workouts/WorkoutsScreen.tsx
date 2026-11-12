@@ -235,7 +235,7 @@ export function HistoryCard({ w }: { w: Workout }) {
             <span className="faint num">{e.sets.length}×</span> {lookup(e.exerciseId).name}
           </li>
         ))}
-        {w.exercises.length > 4 && <li className="faint">{t('common.more', { n: w.exercises.length - 4 })}</li>}
+        {w.exercises.length > 4 && <li className="faint">{t('n.moreExercises', { n: w.exercises.length - 4 })}</li>}
       </ul>
     </button>
   );

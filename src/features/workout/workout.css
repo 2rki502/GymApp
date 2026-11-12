@@ -95,7 +95,7 @@
   justify-content: center;
 }
 .set-row {
-  height: 48px;
+  height: 52px;
   background: var(--surface);
   transition: background 0.25s;
 }
@@ -111,7 +111,7 @@
   40%, 80% { transform: translateX(6px); }
 }
 .set-type {
-  height: 30px;
+  height: 36px;
   border-radius: 8px;
   font-weight: 700;
   font-size: 15px;
@@ -164,8 +164,8 @@
   background: transparent;
 }
 .set-check {
-  width: 40px;
-  height: 34px;
+  width: 44px;
+  height: 42px;
   border-radius: 9px;
   background: var(--surface-2);
   color: var(--text-3);

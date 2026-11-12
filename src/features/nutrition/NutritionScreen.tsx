@@ -86,6 +86,11 @@ function Dashboard({ goal, targets }: { goal: NutritionGoal; targets: Targets })
 
       <CalorieCard goal={goal} targets={targets} eaten={eaten} />
 
+      {/* The screen's main action, visible without scrolling (the corner + is easy to miss). */}
+      <button className="btn btn-primary btn-block nut-add" onClick={() => setFood('new')}>
+        <Icon name="plus" size={18} stroke={2.6} /> {t('nut.addFood')}
+      </button>
+
       <div className="card macro-card">
         {MACROS.map((m) => (
           <MacroBar key={m.key} label={t(m.label)} color={m.color} value={eaten[m.key]} target={targets[m.key]} />
@@ -109,9 +114,6 @@ function Dashboard({ goal, targets }: { goal: NutritionGoal; targets: Targets })
         <div className="card food-empty">
           <strong>{t('nut.noFood')}</strong>
           <p>{t('nut.noFoodText')}</p>
-          <button className="btn btn-primary btn-sm" onClick={() => setFood('new')}>
-            <Icon name="plus" size={16} stroke={2.6} /> {t('nut.addFood')}
-          </button>
         </div>
       ) : (
         MEALS.map((meal) => {

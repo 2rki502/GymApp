@@ -53,11 +53,17 @@ async function check(name, fn) {
     await fn();
     results.push(['PASS', name]);
   } catch (e) {
-    results.push(['FAIL', name, e.message.split('\n')[0]]);
+    results.push(['FAIL', name, process.env.E2E_VERBOSE ? e.message : e.message.split('\n')[0]]);
     await shot(`FAIL-${name.replace(/\W+/g, '_')}`);
   }
 }
 // Tabs remember their last screen (iOS behaviour); a second tap pops to the tab root.
+// Profile is not a tab: it opens from the avatar on Home.
+const profile = async (homeLabel = 'Home') => {
+  await tab(homeLabel);
+  await page.locator('.avatar').click();
+  await page.waitForTimeout(120);
+};
 const tab = async (label) => {
   const btn = page.locator('.tabbar').getByRole('button', { name: label });
   await btn.click();
@@ -80,6 +86,11 @@ await check('nutrition onboarding calculates personal targets', async () => {
   await shot('onboarding-goal');
   await page.getByRole('radio', { name: /Lose Weight/ }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  // Training split is required; Push/Pull/Legs starts with Push today.
+  await page.getByRole('radio', { name: /Push \/ Pull \/ Legs/ }).click();
+  await page.locator('.week-plan').waitFor();
+  await shot('onboarding-split');
+  await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('radio', { name: 'Male', exact: true }).click();
   await page.getByLabel('Age (years)').fill('30');
   await shot('onboarding-about');
@@ -96,6 +107,11 @@ await check('nutrition onboarding calculates personal targets', async () => {
   await page.locator('.targets-macros').getByText('160').waitFor();
   await shot('onboarding-result');
   await page.getByRole('button', { name: 'Start Tracking' }).click();
+  // Onboarding lands on Home with today's workout and the nutrition card.
+  await page.locator('.today h2').getByText('Push', { exact: true }).waitFor();
+  await page.locator('.nut-home').getByText('2,210').waitFor();
+  await shot('home-after-onboarding');
+  await page.locator('.nut-home').click();
   await page.locator('.kcal-big').getByText('2,210').waitFor();
   await shot('nutrition-empty');
 });
@@ -124,13 +140,13 @@ await check('changing the goal recalculates targets', async () => {
   await page.getByText('Targets updated').waitFor();
   // 2,759 x 1.1 = 3,030 target, minus 490 eaten.
   await page.locator('.kcal-big').getByText('2,540').waitFor();
-  await page.getByRole('button', { name: /Back to Home/ }).click();
+  await tab('Home');
   await page.locator('.nut-home').getByText('2,540').waitFor();
 });
 
-await check('empty home renders welcome', async () => {
-  await page.getByText('Welcome to Forge').waitFor();
-  await shot('home-empty');
+await check('home shows today from the split picked in onboarding', async () => {
+  await page.getByRole('button', { name: /Start Workout/ }).waitFor();
+  await shot('home-today-split');
 });
 
 await check('library lists gym exercises and opens detail', async () => {
@@ -144,7 +160,7 @@ await check('library lists gym exercises and opens detail', async () => {
 
 await check('library home section shows routines', async () => {
   await page.getByRole('tab', { name: 'Home' }).click();
-  await page.getByText('Full-Body Routines').first().waitFor();
+  await page.locator('.lib-section', { hasText: 'Routines' }).waitFor();
   await shot('library-home');
   await page.getByRole('button', { name: /HIIT Express/ }).click();
   await page.getByRole('button', { name: /Save/ }).click();
@@ -152,10 +168,39 @@ await check('library home section shows routines', async () => {
   await page.getByRole('button', { name: /Back to Library/ }).click();
 });
 
-await check('apply PPL split preset', async () => {
+await check('home library filters by muscle, shows levels and alternatives', async () => {
+  // Gym exercises you can do at home (Lateral Raise) appear alongside home-only ones.
+  await page.locator('.chips').getByRole('tab', { name: 'Shoulders', exact: true }).click();
+  await page.getByRole('button', { name: /Lateral Raise/ }).first().waitFor();
+  await page.getByRole('button', { name: /Wall Handstand Hold/ }).waitFor();
+  await shot('library-home-shoulders');
+  await page.locator('.chips').getByRole('tab', { name: 'Arms', exact: true }).click();
+  const towel = page.locator('.lib-card', { hasText: 'Towel Bicep Curl' });
+  if ((await towel.locator('.lib-level').innerText()) !== 'Beginner') throw new Error('missing level badge');
+  await towel.click();
+  await page.getByRole('heading', { name: 'Alternatives' }).waitFor();
+  await page.evaluate(() => document.querySelector('.screen')?.scrollTo(0, 99999));
+  await wait(200);
+  await shot('exercise-alternatives');
+  await page.locator('.alt-row', { hasText: 'Chin-Up' }).click();
+  await page.locator('h1.guide-title', { hasText: 'Chin-Up' }).waitFor();
+  // Back returns to the exercise you came from, then to the library.
+  await page.getByRole('button', { name: /Back to Towel Bicep Curl/ }).click();
+  await page.locator('h1.guide-title', { hasText: 'Towel Bicep Curl' }).waitFor();
+  await page.getByRole('button', { name: /Back to Library/ }).click();
+  await page.locator('.chips').getByRole('tab', { name: 'All muscles' }).click();
+  // Routines tab groups the programs by level.
+  await page.locator('.chips').getByRole('tab', { name: 'Routines', exact: true }).click();
+  await page.getByRole('heading', { name: 'Advanced' }).waitFor();
+  await page.getByRole('button', { name: /Advanced Calisthenics/ }).waitFor();
+  await shot('library-home-routines');
+  await page.locator('.chips').getByRole('tab', { name: 'All', exact: true }).click();
+});
+
+await check('add another program from split presets', async () => {
   await tab('Workouts');
   await page.getByRole('tab', { name: 'Splits' }).click();
-  await page.getByRole('button', { name: /Push \/ Pull \/ Legs/ }).click();
+  await page.getByRole('button', { name: /Upper \/ Lower/ }).click();
   await confirmAlert('Add Program');
   await page.getByText('Active', { exact: true }).waitFor();
   await shot('splits');
@@ -241,7 +286,7 @@ await check('data persists across reload', async () => {
 });
 
 await check('load sample data from profile', async () => {
-  await tab('Profile');
+  await profile();
   await page.getByRole('button', { name: /Load sample data/ }).click();
   await confirmAlert('Load Sample');
   await page.getByText('Sample data loaded').waitFor();
@@ -374,34 +419,39 @@ await check('exercise picker search has an empty state', async () => {
 });
 
 await check('switch to Arabic (RTL) and back', async () => {
-  await tab('Profile');
+  await profile();
   await page.getByRole('tab', { name: 'العربية' }).click();
   await page.getByText('التفضيلات').waitFor();
   const dir = await page.evaluate(() => `${document.documentElement.lang}/${document.documentElement.dir}`);
   if (dir !== 'ar/rtl') throw new Error(`expected ar/rtl, got ${dir}`);
   // Navigation labels and library content are translated.
   await page.locator('.tabbar').getByRole('button', { name: 'المكتبة' }).click();
-  await page.getByText('ضغط البنش بالبار').first().waitFor();
+  await page.getByText('بنش برس بالبار').first().waitFor();
+  // Home library, its filters, levels and alternatives are translated too.
+  await page.getByRole('tab', { name: 'المنزل' }).click();
+  await page.locator('.chips').getByRole('tab', { name: 'الذراعان', exact: true }).click();
+  await page.locator('.lib-card', { hasText: 'بايسبس بالمنشفة' }).click();
+  await page.getByRole('heading', { name: 'بدائل' }).waitFor();
+  await page.evaluate(() => document.querySelector('.screen')?.scrollTo(0, 99999));
+  await wait(200);
+  await shot('arabic-alternatives');
   // Survives a reload (applied before first paint).
   await page.goto(`${BASE}/?ar=1`);
   const dir2 = await page.evaluate(() => document.documentElement.dir);
   if (dir2 !== 'rtl') throw new Error('direction not restored after reload');
   await shot('arabic');
-  const profile = page.locator('.tabbar').getByRole('button', { name: 'حسابي' });
-  await profile.click();
-  await page.waitForTimeout(120);
-  await profile.click();
+  await profile('الرئيسية');
   await page.getByRole('tab', { name: 'English' }).click();
   await page.getByText('Preferences').waitFor();
 });
 
 await check('switch to imperial units', async () => {
-  await tab('Profile');
+  await profile();
   await page.getByRole('tab', { name: 'lb · in' }).click();
   await shot('profile');
   await tab('Home');
   await page.getByText(/lb/).first().waitFor();
-  await tab('Profile');
+  await profile();
   await page.getByRole('tab', { name: 'kg · cm' }).click();
 });
 

@@ -4,8 +4,8 @@ import { computePRs, e1rm, exerciseHistory, previousSets, workoutSetCount } from
 import { comparePeriod, weeklyBuckets, weeklyStreak } from './stats';
 import { fmtWeight, fromDisplayWeight, parseDecimal, toDisplayWeight } from './units';
 import {
-  addSet, canComplete, cycleSetType, finalizeWorkout, moveExercise, newExerciseLog, newSet, newWorkout,
-  parseRepTarget, removeSet, updateSet, workoutFromRoutine,
+  addSet, canComplete, cycleSetType, fillFromHint, finalizeWorkout, moveExercise, newExerciseLog, newSet, newWorkout,
+  parseRepTarget, planHint, removeSet, updateSet, workoutFromRoutine,
 } from './workoutOps';
 import type { ExerciseKind, Workout } from './types';
 
@@ -210,5 +210,33 @@ describe('workout ops', () => {
     expect(w.exercises[0].sets[0]).toMatchObject({ weight: 80, reps: 6 });
     expect(w.exercises[1].restSec).toBe(60);
     expect(parseRepTarget('AMRAP')).toBeNull();
+  });
+
+  it("remembers the plan's target so a first-timer isn't faced with blank sets", () => {
+    const w = workoutFromRoutine(
+      {
+        id: 'r', name: 'Push', color: 'lime', createdAt: '', updatedAt: '',
+        exercises: [
+          { id: 'x', exerciseId: 'bench', sets: 4, reps: '5-8', restSec: 150 },
+          { id: 'y', exerciseId: 'plank', sets: 2, reps: '45s', restSec: 60 },
+          { id: 'z', exerciseId: 'bench', sets: 3, reps: 'AMRAP', restSec: 90 },
+        ],
+      },
+      kindOf,
+    );
+    // Values stay empty (last time's numbers still win when there is history)...
+    expect(w.exercises[0].sets[0]).toMatchObject({ weight: null, reps: null });
+    // ...but the target is kept and becomes the fallback hint.
+    expect(planHint(w.exercises[0], 'weight')).toMatchObject({ weight: null, reps: 5 });
+    expect(planHint(w.exercises[1], 'time')).toMatchObject({ duration: 45 });
+    expect(planHint(w.exercises[2], 'weight')).toBeUndefined();
+  });
+
+  it('completes a first-time set from the plan once the weight is typed', () => {
+    const log = { ...newExerciseLog('bench', 90, 1), targetReps: 5 };
+    const typed = { ...log.sets[0], weight: 60 };
+    expect(canComplete(fillFromHint(log.sets[0], planHint(log, 'weight')), 'weight')).toBe(false); // weight still needed
+    expect(fillFromHint(typed, planHint(log, 'weight'))).toMatchObject({ weight: 60, reps: 5 });
+    expect(canComplete(fillFromHint(typed, planHint(log, 'weight')), 'weight')).toBe(true);
   });
 });

@@ -69,6 +69,9 @@ export interface ExerciseLog {
   restSec: number;
   note?: string;
   sets: SetLog[];
+  /** The routine's target ("5-8" → 5 reps, "45s" → 45 s): the hint when there is no history yet. */
+  targetReps?: number;
+  targetSec?: number;
 }
 
 export interface Workout {

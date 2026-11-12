@@ -229,6 +229,7 @@ export const ar: Record<Key, Entry> = {
   'editor.restAria': 'الراحة',
   'editor.needDuration': 'أدخل المدة أولًا',
   'editor.needReps': 'أدخل عدد التكرارات أولًا',
+  'editor.needWeight': 'أدخل الوزن الذي رفعته في هذه المجموعة',
   'editor.needWeightReps': 'أدخل الوزن والتكرارات أولًا',
   'editor.setsProgress': '{done}/{total} مجموعات',
   'editor.options': 'خيارات {name}',

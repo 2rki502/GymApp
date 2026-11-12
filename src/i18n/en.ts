@@ -188,6 +188,7 @@ export const en = {
   'editor.restAria': 'rest',
   'editor.needDuration': 'Enter a duration first',
   'editor.needReps': 'Enter your reps first',
+  'editor.needWeight': 'Add the weight you lifted for this set',
   'editor.needWeightReps': 'Enter weight and reps first',
   'editor.setsProgress': '{done}/{total} sets',
   'editor.options': '{name} options',

@@ -13,6 +13,7 @@ export function NumInput({
   integer,
   ariaLabel,
   className,
+  id,
   max = 99999,
 }: {
   value: number | null;
@@ -21,6 +22,7 @@ export function NumInput({
   integer?: boolean;
   ariaLabel: string;
   className?: string;
+  id?: string;
   max?: number;
 }) {
   const [text, setText] = useState(fmt(value));
@@ -33,6 +35,7 @@ export function NumInput({
   return (
     <input
       className={className}
+      id={id}
       value={text}
       placeholder={placeholder}
       aria-label={ariaLabel}

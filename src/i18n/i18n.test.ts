@@ -83,7 +83,7 @@ describe('Arabic content', () => {
     const bench = EXERCISES.find((e) => e.id === 'bench-press')!;
     expect(localizeExercise(bench).name).toBe('Barbell Bench Press');
     setLang('ar');
-    expect(localizeExercise(bench).name).toBe('ضغط البنش بالبار');
+    expect(localizeExercise(bench).name).toBe('بنش برس بالبار');
     expect(localizePreset(SPLIT_PRESETS[0]).routines.map((r) => r.name)).toEqual(['دفع', 'سحب', 'أرجل']);
   });
 

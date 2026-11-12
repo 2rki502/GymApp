@@ -1,4 +1,5 @@
 import type { ExerciseGroup, Muscle } from '@/domain/types';
+import { AR_HOME_EXERCISES } from './exercises.home.ar';
 
 /** Arabic content for the exercise library: [name, instructions, mistakes]. */
 export const AR_EXERCISES: Record<string, [string, string[], string[]]> = {
@@ -745,6 +746,7 @@ export const AR_EXERCISES: Record<string, [string, string[], string[]]> = {
     'تحريك الذراعين فقط دون الجذع.',
     'الاستعجال في الالتفاف.',
   ]],
+  ...AR_HOME_EXERCISES,
 };
 
 export const AR_MUSCLES: Record<Muscle, string> = {
@@ -782,7 +784,7 @@ export const AR_GROUPS: Record<ExerciseGroup, string> = {
   bodyweight: 'وزن الجسم',
   dumbbell: 'الدمبل',
   band: 'شريط المقاومة',
-  noequipment: 'بدون أدوات',
+  noequipment: 'كارديو و HIIT',
   custom: 'مخصص',
 };
 
@@ -821,6 +823,12 @@ export const AR_EQUIPMENT: Record<string, string> = {
   'Anchor point': 'نقطة تثبيت',
   'None (optional weight)': 'بدون (وزن اختياري)',
   'No equipment': 'بدون أدوات',
+  'Sturdy table': 'طاولة ثابتة',
+  'Step or sturdy chair': 'درجة أو كرسي ثابت',
+  'Sofa or partner': 'كنبة أو شريك',
+  'Loop band': 'شريط مقاومة دائري',
+  Towel: 'منشفة',
+  'Dumbbells, bands or none': 'دمبل أو أشرطة أو بدون أدوات',
 };
 
 /** Home routine templates: id → [name, description]. */
@@ -830,6 +838,16 @@ export const AR_TEMPLATES: Record<string, [string, string]> = {
   'tpl-band-full': ['دائرة شريط المقاومة', 'تمارين قوة لطيفة على المفاصل يمكنك أداؤها في أي مكان بشريط واحد.'],
   'tpl-hiit': ['HIIT السريع', 'فترات تدريب قصيرة ومكثفة لرفع نبض القلب وحرق السعرات.'],
   'tpl-core': ['قوة الجذع', 'تمرين ختامي مركّز لثبات الجذع وتحسين القوام وتقوية منطقة البطن.'],
+  'tpl-bw-starter': ['بداية التمرين في المنزل', 'لأسابيعك الأولى: نسخ أسهل من الحركات الأساسية لبناء قاعدة قوية.'],
+  'tpl-bw-upper': ['الجزء العلوي بوزن الجسم', 'الصدر والظهر والأكتاف والذراعان بدون أدوات. طاولة ثابتة تكفي لتمارين السحب.'],
+  'tpl-bw-lower': ['الأرجل والأرداف بوزن الجسم', 'تمارين الساق الواحدة تجعل وزن الجسم صعبًا بما يكفي لمواصلة بناء الأرجل في المنزل.'],
+  'tpl-calisthenics': ['كاليستنكس متقدم', 'تدرّجات صعبة بوزن الجسم للقوة: ضغط الآرتشر والعقلة والبيستول سكوات والنورديك.'],
+  'tpl-db-upper': ['الجزء العلوي بالدمبل', 'دفع وسحب وذراعان بزوج من الدمبلات، والأرض بدل البنش.'],
+  'tpl-db-lower': ['الأرجل والأرداف بالدمبل', 'حركات السكوات والانحناء والطعن لبناء أرجل وأرداف قوية في المنزل.'],
+  'tpl-band-upper': ['الجزء العلوي بالشريط', 'حصة كاملة للجزء العلوي بشريط واحد ونقطة تثبيت على الباب.'],
+  'tpl-hiit-advanced': ['HIIT متقدم', 'قفزات انفجارية وزحف مع راحة قصيرة. فقط عندما تصبح الأساسيات سهلة.'],
+  'tpl-core-advanced': ['جذع متقدم', 'الهولو هولد والـ V-up وتمارين مقاومة الدوران لجذع قوي وثابت.'],
+  'tpl-db-power': ['لياقة بالدمبل', 'حركات قوة لكامل الجسم متتالية لبناء القوة واللياقة معًا.'],
 };
 
 /** Split presets: id → [name, description]; routine keys → name. */

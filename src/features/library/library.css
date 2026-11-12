@@ -31,6 +31,7 @@
   transform: scale(0.97);
 }
 .lib-art {
+  position: relative;
   aspect-ratio: 5 / 4;
   border-radius: 14px;
   background: radial-gradient(120% 90% at 50% 100%, rgba(200, 255, 61, 0.07), transparent 60%), var(--surface-2);
@@ -330,4 +331,104 @@
   position: static;
   justify-content: center;
   margin: 10px 0 6px;
+}
+
+/* Difficulty: green → amber → red, readable in both themes. */
+.lib-level,
+.lib-level-badge {
+  --lv: var(--accent-fg);
+}
+.lib-level.is-intermediate,
+.lib-level-badge.is-intermediate {
+  --lv: var(--orange);
+}
+.lib-level.is-advanced,
+.lib-level-badge.is-advanced {
+  --lv: var(--pink);
+}
+.lib-level {
+  position: absolute;
+  top: 6px;
+  inset-inline-start: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: var(--lv);
+  background: color-mix(in srgb, var(--lv) 16%, var(--surface));
+}
+.lib-level-badge {
+  color: var(--lv);
+  background: color-mix(in srgb, var(--lv) 16%, transparent);
+}
+.lib-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-3);
+  margin-inline-start: 4px;
+}
+.lib-head .chips + .chips {
+  margin-top: -2px;
+}
+.tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.tpl-grid .tpl-card {
+  width: auto;
+  max-width: none;
+  min-height: 150px;
+}
+
+/* Alternatives on the exercise guide */
+.guide-alt-hint {
+  margin: -4px 0 10px;
+  font-size: 14px;
+}
+.alt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.alt-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding-block: 8px;
+  padding-inline: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: start;
+}
+.alt-row:active {
+  transform: scale(0.98);
+}
+.alt-art {
+  flex: none;
+  width: 56px;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.alt-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.alt-main strong {
+  font-size: 15px;
+  font-weight: 650;
+}
+.alt-main span {
+  font-size: 13px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

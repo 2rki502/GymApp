@@ -15,6 +15,9 @@ export type GymGroup = 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'abs' 
 export type HomeGroup = 'bodyweight' | 'dumbbell' | 'band' | 'noequipment';
 export type ExerciseGroup = GymGroup | HomeGroup | 'custom';
 
+/** Difficulty, shared by exercises and routine templates. */
+export type Level = 'Beginner' | 'Intermediate' | 'Advanced';
+
 /** How an exercise is logged. */
 export type ExerciseKind = 'weight' | 'reps' | 'time';
 
@@ -47,6 +50,14 @@ export interface Exercise {
   instructions: string[];
   mistakes: string[];
   recommended: { sets: number; reps: string; restSec: number };
+  /** Library exercises only (see data/exerciseMeta.ts). */
+  level?: Level;
+  /** Body area it trains. For gym exercises this is the same as `group`. */
+  area?: GymGroup;
+  /** Where it is listed in the Home library: its own group, or a gym exercise you can do at home. */
+  homeGroup?: HomeGroup;
+  /** Swaps when you lack the equipment or need it easier/harder, best first. */
+  alternatives?: ID[];
   custom?: boolean;
 }
 

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { equipmentLabel, fmtReps, groupLabel, muscleLabel } from '@/data/localize';
+import { equipmentLabel, fmtReps, groupLabel, levelLabel, muscleLabel } from '@/data/localize';
 import { formatShortDate } from '@/domain/dates';
 import { exerciseHistory } from '@/domain/metrics';
 import { addExercises } from '@/domain/workoutOps';
@@ -14,7 +14,7 @@ import { confirm, toast } from '@/ui/dialogs';
 import { Icon } from '@/ui/Icon';
 import { Screen } from '@/ui/Screen';
 import { Sheet } from '@/ui/Sheet';
-import { ExerciseAnimation } from './figure/Figure';
+import { ExerciseAnimation, ExerciseThumb } from './figure/Figure';
 import './library.css';
 
 /** Exercise guide content, shared by the library route and the in-session peek sheet. */
@@ -32,6 +32,7 @@ export function ExerciseGuide({ ex, compact }: { ex: Exercise; compact?: boolean
         {ex.video ? <ExerciseVideoPlayer video={ex.video} label={ex.name} /> : <ExerciseAnimation anim={ex.anim} className="guide-anim" />}
         <div className="guide-tags">
           <span className="badge">{groupLabel(ex.group)}</span>
+          {ex.level && <span className={`badge lib-level-badge is-${ex.level.toLowerCase()}`}>{levelLabel(ex.level)}</span>}
           {ex.equipment.slice(0, 2).map((q) => (
             <span key={q} className="badge badge-muted">
               {equipmentLabel(q)}
@@ -110,6 +111,8 @@ export function ExerciseGuide({ ex, compact }: { ex: Exercise; compact?: boolean
         </section>
       )}
 
+      {!!ex.alternatives?.length && <Alternatives from={ex.id} ids={ex.alternatives} compact={compact} />}
+
       {!compact && (
         <section className="guide-block">
           <h3>{t('guide.history')}</h3>
@@ -144,7 +147,46 @@ export function ExerciseGuide({ ex, compact }: { ex: Exercise; compact?: boolean
   );
 }
 
-export function ExerciseDetailScreen({ id }: { id: string }) {
+/** Equipment shown on an alternative: what it needs, or "No equipment". */
+function gearText(ex: Exercise): string {
+  const gear = ex.equipment.filter((q) => q !== 'None' && q !== 'None (optional weight)');
+  return gear.length ? gear.map(equipmentLabel).join(' · ') : t('guide.noGear');
+}
+
+/** Swaps for when you lack the equipment or need an easier/harder version. */
+function Alternatives({ from, ids, compact }: { from: string; ids: string[]; compact?: boolean }) {
+  const lookup = useExerciseLookup();
+  return (
+    <section className="guide-block">
+      <h3>{t('guide.alternatives')}</h3>
+      <p className="muted guide-alt-hint">{t('guide.altHint')}</p>
+      <div className="alt-list">
+        {ids.map(lookup).map((a) => (
+          <button
+            key={a.id}
+            className="alt-row"
+            // Inside a live session the guide is a sheet: switch the sheet instead of leaving the session.
+            onClick={() => (compact ? useUI.getState().set({ peekExercise: a.id }) : navigate(`/library/exercise/${a.id}/from/${from}`))}
+          >
+            <span className="alt-art">
+              <ExerciseThumb anim={a.anim} video={a.video} />
+            </span>
+            <span className="alt-main">
+              <strong>{a.name}</strong>
+              <span>
+                {gearText(a)}
+                {a.level ? ` · ${levelLabel(a.level)}` : ''}
+              </span>
+            </span>
+            <Icon name="chevronRight" size={16} className="faint" />
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function ExerciseDetailScreen({ id, from }: { id: string; from?: string }) {
   const lookup = useExerciseLookup();
   const ex = lookup(id);
   const session = useData((s) => s.session);
@@ -179,7 +221,7 @@ export function ExerciseDetailScreen({ id }: { id: string }) {
   ) : null;
 
   return (
-    <Screen title={ex.name} back={{ label: t('lib.title'), to: '/library' }} right={right}>
+    <Screen title={ex.name} back={from ? { label: lookup(from).name, to: `/library/exercise/${from}` } : { label: t('lib.title'), to: '/library' }} right={right}>
       <h1 className="guide-title">{ex.name}</h1>
       <ExerciseGuide ex={ex} />
     </Screen>

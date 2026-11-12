@@ -39,9 +39,9 @@ export const equipmentLabel = (e: string) => (getLang() === 'ar' ? plainArabic(A
 export function fmtReps(reps: string): string {
   if (getLang() === 'en') return reps;
   const leg = /^(.+?)\s*\/\s*leg$/i.exec(reps);
-  if (leg) return t('reps.perLeg', { r: leg[1] });
+  if (leg) return t('reps.perLeg', { r: fmtReps(leg[1]) });
   const side = /^(.+?)\s*\/\s*side$/i.exec(reps);
-  if (side) return t('reps.perSide', { r: side[1] });
+  if (side) return t('reps.perSide', { r: fmtReps(side[1]) });
   const sec = /^([\d–-]+)s$/.exec(reps);
   if (sec) return t('reps.sec', { r: sec[1] });
   return reps;

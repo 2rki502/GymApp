@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { GYM_GROUPS, HOME_GROUP_LIST } from '@/data/exercises';
-import { englishName, equipmentLabel, groupLabel, muscleLabel } from '@/data/localize';
+import { englishName, equipmentLabel, groupLabel, levelLabel, muscleLabel } from '@/data/localize';
 import { uid } from '@/domain/id';
 import type { Exercise, ExerciseGroup, ExerciseKind, ID, Muscle } from '@/domain/types';
 import { ExerciseThumb } from '@/features/library/figure/Figure';
@@ -28,6 +28,8 @@ export function matchesQuery(e: Exercise, q: string): boolean {
     ...e.equipment.map(equipmentLabel),
     ...e.equipment,
     groupLabel(e.group),
+    ...(e.homeGroup && e.homeGroup !== e.group ? [groupLabel(e.homeGroup)] : []),
+    ...(e.level ? [levelLabel(e.level), e.level] : []),
   ]
     .join(' ')
     .toLowerCase();
@@ -78,7 +80,7 @@ export function ExercisePicker({
   const list = useMemo(() => {
     let base = all;
     if (filter === 'recent') base = recentIds.map((id) => all.find((e) => e.id === id)).filter((e): e is Exercise => !!e);
-    else if (filter !== 'all') base = all.filter((e) => e.group === filter);
+    else if (filter !== 'all') base = all.filter((e) => e.group === filter || e.homeGroup === filter);
     const r = base.filter((e) => matchesQuery(e, q));
     return filter === 'recent' ? r : [...r].sort((a, b) => a.name.localeCompare(b.name));
   }, [all, filter, q, recentIds]);

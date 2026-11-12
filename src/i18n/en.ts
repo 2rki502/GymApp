@@ -79,6 +79,7 @@ export const en = {
   'tab.main': 'Main',
   'tab.home': 'Home',
   'tab.workouts': 'Workouts',
+  'tab.nutrition': 'Nutrition',
   'tab.progress': 'Progress',
   'tab.library': 'Library',
   'tab.profile': 'Profile',

@@ -99,6 +99,7 @@ export const ar: Record<Key, Entry> = {
   'tab.main': 'التنقل الرئيسي',
   'tab.home': 'الرئيسية',
   'tab.workouts': 'التدريب',
+  'tab.nutrition': 'التغذية',
   'tab.progress': 'التقدّم',
   'tab.library': 'المكتبة',
   'tab.profile': 'حسابي',

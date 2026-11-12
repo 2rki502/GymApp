@@ -5,9 +5,9 @@ import { Icon, type IconName } from './Icon';
 const ITEMS: { tab: Tab; label: Key; icon: IconName }[] = [
   { tab: '/', label: 'tab.home', icon: 'home' },
   { tab: '/workouts', label: 'tab.workouts', icon: 'dumbbell' },
+  { tab: '/nutrition', label: 'tab.nutrition', icon: 'food' },
   { tab: '/progress', label: 'tab.progress', icon: 'chart' },
   { tab: '/library', label: 'tab.library', icon: 'book' },
-  { tab: '/profile', label: 'tab.profile', icon: 'user' },
 ];
 
 export function TabBar() {

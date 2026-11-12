@@ -16,7 +16,6 @@ import { AboutFields, ActivityPicker, BodyFields, GOAL_ICON, GoalPicker, goalTip
 import { initialDraft, parseDraft, savePlan, type PlanDraft } from './planForm';
 import './nutrition.css';
 
-const back = () => ({ label: t('tab.home'), to: '/' });
 
 /** How the calorie ring reads for each goal: a ceiling when cutting, a target to reach when building. */
 export function calorieTone(goal: NutritionGoal, consumed: number, target: number): 'normal' | 'over' | 'met' {
@@ -35,7 +34,7 @@ export function NutritionScreen() {
 
   if (!profile || !targets) {
     return (
-      <Screen title={title} back={back()}>
+      <Screen title={title}>
         <EmptyState
           icon="food"
           title={t('nut.setupTitle')}
@@ -67,7 +66,6 @@ function Dashboard({ goal, targets }: { goal: NutritionGoal; targets: Targets })
     <Screen
       title={t('nut.title')}
       large
-      back={back()}
       right={
         <button className="nav-btn" onClick={() => setFood('new')} aria-label={t('nut.addFood')}>
           <Icon name="plus" size={24} stroke={2.4} />

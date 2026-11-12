@@ -7,7 +7,9 @@
 import { useSyncExternalStore } from 'react';
 
 export type Direction = 'push' | 'pop' | 'tab' | 'none';
-export const TABS = ['/', '/workouts', '/progress', '/library', '/profile'] as const;
+// Nutrition sits in the middle (logged several times a day, easiest thumb reach).
+// Profile is not a tab: it opens from the avatar on Home and belongs to the Home stack.
+export const TABS = ['/', '/workouts', '/nutrition', '/progress', '/library'] as const;
 export type Tab = (typeof TABS)[number];
 
 interface RouterState {

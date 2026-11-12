@@ -1,7 +1,9 @@
-import type { Exercise, ExerciseGroup, ExerciseKind, LibrarySection, Muscle } from '@/domain/types';
+import type { Exercise, ExerciseGroup, ExerciseKind, GymGroup, HomeGroup, LibrarySection, Muscle } from '@/domain/types';
+import { EXERCISE_META } from './exerciseMeta';
 import { EXERCISE_VIDEOS } from './videos';
+import { HOME_DEFS } from './exercises.home';
 
-type Def = [
+export type Def = [
   id: string,
   name: string,
   group: ExerciseGroup,
@@ -17,21 +19,29 @@ type Def = [
 
 const HOME_GROUPS: ExerciseGroup[] = ['bodyweight', 'dumbbell', 'band', 'noequipment'];
 
-const build = ([id, name, group, kind, anim, primary, secondary, equipment, [sets, reps, restSec], instructions, mistakes]: Def): Exercise => ({
-  id,
-  name,
-  section: (HOME_GROUPS.includes(group) ? 'home' : 'gym') as LibrarySection,
-  group,
-  kind,
-  anim,
-  ...(EXERCISE_VIDEOS[id] ? { video: EXERCISE_VIDEOS[id] } : {}),
-  primary,
-  secondary,
-  equipment,
-  recommended: { sets, reps, restSec },
-  instructions,
-  mistakes,
-});
+const build = ([id, name, group, kind, anim, primary, secondary, equipment, [sets, reps, restSec], instructions, mistakes]: Def): Exercise => {
+  const home = HOME_GROUPS.includes(group);
+  const meta = EXERCISE_META[id];
+  const homeGroup = home ? (group as HomeGroup) : meta?.home;
+  return {
+    id,
+    name,
+    section: (home ? 'home' : 'gym') as LibrarySection,
+    group,
+    kind,
+    anim,
+    ...(EXERCISE_VIDEOS[id] ? { video: EXERCISE_VIDEOS[id] } : {}),
+    primary,
+    secondary,
+    equipment,
+    recommended: { sets, reps, restSec },
+    instructions,
+    mistakes,
+    ...(meta ? { level: meta.level, alternatives: meta.alt } : {}),
+    ...(home ? (meta?.area ? { area: meta.area } : {}) : { area: group as GymGroup }),
+    ...(homeGroup ? { homeGroup } : {}),
+  };
+};
 
 const DEFS: Def[] = [
   // ─── GYM · CHEST ───────────────────────────────────────────────────────────
@@ -444,7 +454,7 @@ const DEFS: Def[] = [
      'Lower with control.'],
     ['Arching the lower back.', 'Rotating the hips open.', 'Using momentum.']],
 
-  // ─── HOME · NO EQUIPMENT (CONDITIONING) ────────────────────────────────────
+  // ─── HOME · CARDIO & HIIT (NO EQUIPMENT) ───────────────────────────────────
   ['burpee', 'Burpee', 'noequipment', 'reps', 'burpee', ['cardio'], ['quads', 'chest', 'abs'], ['None'], [4, '10-15', 60],
     ['From standing, squat down and place your hands on the floor.',
      'Jump your feet back into a high plank.',
@@ -489,7 +499,7 @@ const DEFS: Def[] = [
     ['Rounding the back.', 'Only moving the arms, not the torso.', 'Rushing the rotation.']],
 ];
 
-export const EXERCISES: Exercise[] = DEFS.map(build);
+export const EXERCISES: Exercise[] = [...DEFS, ...HOME_DEFS].map(build);
 
 export const GROUP_LABEL: Record<ExerciseGroup, string> = {
   chest: 'Chest',
@@ -502,7 +512,7 @@ export const GROUP_LABEL: Record<ExerciseGroup, string> = {
   bodyweight: 'Bodyweight',
   dumbbell: 'Dumbbell',
   band: 'Resistance Band',
-  noequipment: 'No Equipment',
+  noequipment: 'Cardio & HIIT',
   custom: 'Custom',
 };
 

@@ -79,13 +79,20 @@ export function frontSkeleton(p: Pose): FrontSkeleton {
     const toe: Pt = [ankle[0] + 5 * m, ankle[1] + 2];
     return { shoulder, elbow, wrist, hip, knee, ankle, toe };
   };
-  return {
-    head,
-    neck,
-    pelvis,
-    right: side(1, p.ua, p.fa, p.th, p.sh),
-    left: side(-1, p.ua2 ?? p.ua, p.fa2 ?? p.fa, p.th2 ?? p.th, p.sh2 ?? p.sh),
-  };
+  const right = side(1, p.ua, p.fa, p.th, p.sh);
+  const left = side(-1, p.ua2 ?? p.ua, p.fa2 ?? p.fa, p.th2 ?? p.th, p.sh2 ?? p.sh);
+  // `t` below 180 leans the upper body toward the figure's right (side bends, chops).
+  const lean = rad(180 - p.t);
+  if (lean) {
+    const rot = (q: Pt): Pt => [q[0] * Math.cos(lean) - q[1] * Math.sin(lean), q[0] * Math.sin(lean) + q[1] * Math.cos(lean)];
+    for (const s of [right, left]) {
+      s.shoulder = rot(s.shoulder);
+      s.elbow = rot(s.elbow);
+      s.wrist = rot(s.wrist);
+    }
+    return { head: rot(head), neck: rot(neck), pelvis, right, left };
+  }
+  return { head, neck, pelvis, right, left };
 }
 
 const POSE_KEYS: (keyof Pose)[] = ['t', 'n', 'ua', 'fa', 'ua2', 'fa2', 'th', 'sh', 'ft', 'th2', 'sh2', 'ft2', 'ax', 'ay'];

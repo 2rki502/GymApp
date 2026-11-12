@@ -37,6 +37,8 @@ const ROUTES: RouteDef[] = [
   ['/progress/exercise/:id', (p) => <ExerciseProgressScreen id={p.id} />],
   ['/library', () => <LibraryScreen />],
   ['/library/exercise/:id', (p) => <ExerciseDetailScreen id={p.id} />],
+  // Opened from another exercise's alternatives: back returns to that exercise.
+  ['/library/exercise/:id/from/:from', (p) => <ExerciseDetailScreen id={p.id} from={p.from} />],
   ['/library/routine/:id', (p) => <TemplateDetailScreen id={p.id} />],
   ['/profile', () => <ProfileScreen />],
 ];

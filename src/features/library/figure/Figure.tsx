@@ -135,15 +135,17 @@ function SideBody({ pattern, pose }: { pattern: Pattern; pose: Pose }) {
 function FrontBody({ pattern, pose }: { pattern: Pattern; pose: Pose }) {
   const sk = frontSkeleton(pose);
   const anchorY = pattern.anchor === 'ankle' ? Math.max(sk.right.ankle[1], sk.left.ankle[1]) : 0;
-  const off: Pt = [pattern.at[0], or(pose.ay, pattern.at[1]) - anchorY];
+  const off: Pt = [or(pose.ax, pattern.at[0]), or(pose.ay, pattern.at[1]) - anchorY];
   const P = (p: Pt) => add(p, off);
   const sides = [sk.right, sk.left];
-  const mirrorTo = (to: Pt, i: number): Pt => (i === 0 ? to : [2 * pattern.at[0] - to[0], to[1]]);
+  const mirrorTo = (to: Pt, i: number): Pt => (i === 0 ? to : [2 * off[0] - to[0], to[1]]);
+  const tether = pattern.tether;
   return (
     <>
-      {pattern.tether &&
-        pattern.tether.to !== 'ankle' &&
-        sides.map((s, i) => <Tether key={i} from={P(s.wrist)} to={mirrorTo(pattern.tether!.to as Pt, i)} kind={pattern.tether!.kind} />)}
+      {tether &&
+        sides.map((s, i) => (
+          <Tether key={i} from={P(s[tether.from])} to={tether.to === 'ankle' ? P(s.ankle) : mirrorTo(tether.to, i)} kind={tether.kind} />
+        ))}
       <Seg a={P(sk.left.shoulder)} b={P(sk.right.shoulder)} w={9} cls="fig-torso" />
       <Seg a={P(sk.left.hip)} b={P(sk.right.hip)} w={9} cls="fig-torso" />
       <Seg a={P(sk.neck)} b={P(sk.pelvis)} w={12} cls="fig-torso" />
@@ -173,7 +175,7 @@ function figureBounds(pattern: Pattern, pose: Pose): [number, number, number, nu
   } else {
     const sk = frontSkeleton(pose);
     const anchorY = pattern.anchor === 'ankle' ? Math.max(sk.right.ankle[1], sk.left.ankle[1]) : 0;
-    const off: Pt = [pattern.at[0], or(pose.ay, pattern.at[1]) - anchorY];
+    const off: Pt = [or(pose.ax, pattern.at[0]), or(pose.ay, pattern.at[1]) - anchorY];
     pts = [sk.head, sk.pelvis, ...Object.values(sk.right), ...Object.values(sk.left)].map((p) => add(p, off));
   }
   const xs = pts.map((p) => p[0]);

@@ -28,7 +28,7 @@ GitHub Pages…), open it in Safari, then **Share → Add to Home Screen**. Serv
 src/
   domain/      Pure TypeScript: types, PR detection, e1RM, stats, streaks, units, workout edit ops.
                No React, no storage — fully unit-tested.
-  data/        Exercise library (74 exercises), home routines, split presets, sample-data generator.
+  data/        Exercise library (143 exercises), home routines, split presets, sample-data generator.
   store/       Zustand stores. useData = persisted user data; useUI = ephemeral UI state;
                selectors = memoised derived data (PRs, today's plan, exercise lookup).
   lib/         Router (hash-based, iOS tab stacks), IndexedDB photo storage, audio/haptics, backups.
@@ -52,11 +52,33 @@ Key decisions:
 - **Exercise demos** are SVG figures driven by joint-angle keyframes (`features/library/figure`).
   `debug.html` (dev server only) renders every pattern's keyframes for visual checking.
 
+## Home workouts
+
+The Library's **Home** section lists 114 exercises you can do without a gym, in four groups:
+Bodyweight, Dumbbell, Resistance Band, and Cardio & HIIT (all no-equipment). A second row of
+chips narrows any group to a body area (chest, back, shoulders, arms, legs, abs, full body).
+
+- **Levels.** Every exercise and routine is Beginner, Intermediate or Advanced, and each group
+  lists them in that order, so the easier and harder versions of a movement sit together
+  (knee → incline → regular → decline → archer push-up).
+- **Alternatives.** Each exercise links to swaps for when you lack the equipment or need it easier
+  or harder. Every exercise that needs equipment offers at least one you can do without any
+  (household items such as a chair, table, wall or towel count as no equipment).
+- **No duplicates.** Gym exercises that need only home equipment (pull-up, plank, lateral raise,
+  hammer curl…) are listed in Home too, rather than being copied.
+- **Routines.** 15 ready-made home routines across the three levels, for no equipment, dumbbells
+  or a band. Each saves as a normal routine.
+- **Data.** Exercises are defined in `src/data/exercises.ts` and `exercises.home.ts`. Level, body
+  area, alternatives and Home listing for every exercise live in `src/data/exerciseMeta.ts`.
+  `exerciseMeta.test.ts` checks that every exercise has metadata, an animation and Arabic text,
+  that alternatives point to real exercises, and that the library covers every area and level.
+
 ## Nutrition
 
-On first launch a short questionnaire (goal, gender, age, height, weight, activity level, optional
-target weight) sets personal daily calorie and macro targets. It can be skipped and done later from
-the Home card. The Nutrition screen (Home → nutrition card, or Profile → Nutrition plan) shows the
+On first launch a short questionnaire sets personal daily calorie and macro targets (goal, gender,
+age, height, weight, activity level, optional target weight) and picks a weekly training split that
+starts today. Both are required before entering the app (`src/lib/onboarding.ts` decides which
+questions are still needed). The Nutrition tab (also reachable from the Home card) shows the
 targets, what has been eaten, what is left, and the day's food log.
 
 - **Method** (`src/domain/nutrition.ts`): resting energy from the Mifflin-St Jeor equation, times a
@@ -74,7 +96,7 @@ targets, what has been eaten, what is left, and the day's food log.
 
 English and Arabic (`src/i18n`). `en.ts` defines every key; `ar.ts` must cover all of them,
 and the tests enforce this, Arabic plural forms included. Exercise content lives in
-`src/data/exercises.ar.ts`. Arabic switches the layout to right-to-left (`src/styles/rtl.css`).
+`src/data/exercises.ar.ts` and `src/data/exercises.home.ar.ts`. Arabic switches the layout to right-to-left (`src/styles/rtl.css`).
 
 Arabic text uses the beIN Normal font (`src/assets/fonts/beIN-Normal.ttf`). It is loaded only for
 Arabic characters. That font has no diacritic positioning, so Arabic UI text is shown without

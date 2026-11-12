@@ -12,12 +12,18 @@
   stroke: var(--fig-ground);
   stroke-width: 2;
 }
-.fig-limb,
-.fig-torso {
-  stroke: var(--fig-body);
-}
-.fig-head {
+.fig-part {
   fill: var(--fig-body);
+}
+/* Target muscles on the exercise guide: warm tint, distinct from the lime equipment. */
+.fig-part.is-focus {
+  fill: color-mix(in srgb, var(--orange) 78%, var(--fig-body));
+}
+.fig-handle {
+  fill: none;
+  stroke: var(--fig-equip);
+  stroke-width: 2.4;
+  stroke-linecap: round;
 }
 .fig-far {
   opacity: 0.38;
@@ -52,4 +58,9 @@
   stroke: var(--orange);
   stroke-width: 3;
   opacity: 0.85;
+}
+.fig-loopband {
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 1;
 }

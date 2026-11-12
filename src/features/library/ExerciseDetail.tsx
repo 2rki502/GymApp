@@ -29,7 +29,7 @@ export function ExerciseGuide({ ex, compact }: { ex: Exercise; compact?: boolean
   return (
     <div className="guide">
       <div className="guide-hero">
-        {ex.video ? <ExerciseVideoPlayer video={ex.video} label={ex.name} /> : <ExerciseAnimation anim={ex.anim} className="guide-anim" />}
+        {ex.video ? <ExerciseVideoPlayer video={ex.video} label={ex.name} /> : <ExerciseAnimation anim={ex.anim} className="guide-anim" focus={ex.primary} />}
         <div className="guide-tags">
           <span className="badge">{groupLabel(ex.group)}</span>
           {ex.level && <span className={`badge lib-level-badge is-${ex.level.toLowerCase()}`}>{levelLabel(ex.level)}</span>}

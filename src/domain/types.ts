@@ -206,6 +206,16 @@ export interface FoodEntry {
   carbs: number;
   fat: number;
   createdAt: string;
+  /** Set when logged from the food search or scanner (all optional, so older entries stay valid). */
+  brand?: string;
+  barcode?: string;
+  source?: 'builtin' | 'off' | 'manual';
+  /** grams or ml eaten, its unit, and the serving as shown ("1 can (330 ml)") */
+  amount?: number;
+  unit?: 'g' | 'ml';
+  servingLabel?: string;
+  /** per-100 nutrition, so the food can be logged again with a different amount */
+  per100?: { kcal: number; protein: number; carbs: number; fat: number };
 }
 
 export type PRKind = 'weight' | 'e1rm' | 'reps' | 'duration';

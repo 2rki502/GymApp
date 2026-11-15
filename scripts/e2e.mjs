@@ -117,7 +117,9 @@ await check('nutrition onboarding calculates personal targets', async () => {
 });
 
 await check('log food and see consumed and remaining', async () => {
+  // Add Food opens the food search; typing your own values is "Enter manually".
   await page.getByRole('button', { name: 'Add Food' }).first().click();
+  await page.getByRole('button', { name: 'Enter manually' }).click();
   await page.getByPlaceholder('e.g. Chicken and rice').fill('Chicken and rice');
   await page.getByLabel('Protein (g)').fill('40');
   await page.getByLabel('Carbs (g)').fill('60');
@@ -142,6 +144,22 @@ await check('changing the goal recalculates targets', async () => {
   await page.locator('.kcal-big').getByText('2,540').waitFor();
   await tab('Home');
   await page.locator('.nut-home').getByText('2,540').waitFor();
+});
+
+await check('search a common food and log a serving', async () => {
+  await tab('Nutrition');
+  await page.getByRole('button', { name: 'Add Food' }).first().click();
+  await page.getByPlaceholder('Search foods and products').fill('rice');
+  await page.locator('.ff-row', { hasText: 'White rice, cooked' }).click();
+  await page.getByRole('radio', { name: '1 cup (158 g)' }).waitFor();
+  await page.locator('.ff-kcal-big').getByText('205').waitFor();
+  await shot('food-detail');
+  await page.locator('.ff-add').click();
+  await page.getByText('Food added').waitFor();
+  // 2,540 left before; a cup of cooked rice is 205 kcal (USDA).
+  await page.locator('.kcal-big').getByText('2,335').waitFor();
+  await page.getByText('1 cup (158 g)').first().waitFor();
+  await tab('Home');
 });
 
 await check('home shows today from the split picked in onboarding', async () => {

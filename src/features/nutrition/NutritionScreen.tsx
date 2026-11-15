@@ -4,7 +4,7 @@ import { calcTargets, entriesOn, kcalFromMacros, MEALS, mealForHour, recentFoods
 import { uid } from '@/domain/id';
 import type { FoodEntry, LocalDate, Meal, NutritionGoal } from '@/domain/types';
 import { fmtNumber, fmtWeight, parseDecimal } from '@/domain/units';
-import { t } from '@/i18n';
+import { t, type Key } from '@/i18n';
 import { useData } from '@/store/useData';
 import { Ring } from '@/ui/charts';
 import { Chips, EmptyState, Group, Row, SwipeRow } from '@/ui/controls';
@@ -14,6 +14,7 @@ import { Screen, SectionTitle } from '@/ui/Screen';
 import { Sheet } from '@/ui/Sheet';
 import { AboutFields, ActivityPicker, BodyFields, GOAL_ICON, GoalPicker, goalTip, grams, kcal, MacroBar, MACROS, NumField, planLine, TargetSummary, useTargets } from './parts';
 import { initialDraft, parseDraft, savePlan, type PlanDraft } from './planForm';
+import { FoodFinder, type FoodPrefill } from './FoodFinder';
 import './nutrition.css';
 
 
@@ -55,7 +56,8 @@ function Dashboard({ goal, targets }: { goal: NutritionGoal; targets: Targets })
   const foodLog = useData((s) => s.foodLog);
   const today = toLocalDate();
   const [date, setDate] = useState<LocalDate>(today);
-  const [food, setFood] = useState<FoodEntry | 'new' | null>(null);
+  const [food, setFood] = useState<FoodTarget>(null);
+  const [finder, setFinder] = useState(false);
   const [editPlan, setEditPlan] = useState(false);
 
   const entries = useMemo(() => entriesOn(foodLog, date), [foodLog, date]);
@@ -67,7 +69,7 @@ function Dashboard({ goal, targets }: { goal: NutritionGoal; targets: Targets })
       title={t('nut.title')}
       large
       right={
-        <button className="nav-btn" onClick={() => setFood('new')} aria-label={t('nut.addFood')}>
+        <button className="nav-btn" onClick={() => setFinder(true)} aria-label={t('nut.addFood')}>
           <Icon name="plus" size={24} stroke={2.4} />
         </button>
       }
@@ -85,7 +87,7 @@ function Dashboard({ goal, targets }: { goal: NutritionGoal; targets: Targets })
       <CalorieCard goal={goal} targets={targets} eaten={eaten} />
 
       {/* The screen's main action, visible without scrolling (the corner + is easy to miss). */}
-      <button className="btn btn-primary btn-block nut-add" onClick={() => setFood('new')}>
+      <button className="btn btn-primary btn-block nut-add" onClick={() => setFinder(true)}>
         <Icon name="plus" size={18} stroke={2.6} /> {t('nut.addFood')}
       </button>
 
@@ -101,7 +103,7 @@ function Dashboard({ goal, targets }: { goal: NutritionGoal; targets: Targets })
 
       <SectionTitle
         action={
-          <button className="link" onClick={() => setFood('new')}>
+          <button className="link" onClick={() => setFinder(true)}>
             {t('nut.addFood')}
           </button>
         }
@@ -134,7 +136,17 @@ function Dashboard({ goal, targets }: { goal: NutritionGoal; targets: Targets })
                     toast(t('nut.foodDeleted'));
                   }}
                 >
-                  <Row label={e.name} detail={<MacroLine e={e} />} value={<span className="num">{kcal(e.kcal)}</span>} onClick={() => setFood(e)} />
+                  <Row
+                    label={e.name}
+                    detail={
+                      <>
+                        {e.servingLabel && <span className="food-serving">{e.servingLabel}</span>}
+                        <MacroLine e={e} />
+                      </>
+                    }
+                    value={<span className="num">{kcal(e.kcal)}</span>}
+                    onClick={() => setFood(e)}
+                  />
                 </SwipeRow>
               ))}
             </Group>
@@ -144,6 +156,7 @@ function Dashboard({ goal, targets }: { goal: NutritionGoal; targets: Targets })
 
       <PlanGroup goal={goal} targets={targets} onEdit={() => setEditPlan(true)} />
 
+      <FoodFinder open={finder} date={date} onClose={() => setFinder(false)} onManual={(prefill) => setFood({ prefill })} />
       <FoodSheet entry={food} date={date} onClose={() => setFood(null)} />
       <PlanSheet open={editPlan} onClose={() => setEditPlan(false)} />
     </Screen>
@@ -227,16 +240,36 @@ const foodDraft = (e: FoodEntry | null): FoodDraft =>
   e
     ? { name: e.name, meal: e.meal, kcal: text(e.kcal), protein: text(e.protein), carbs: text(e.carbs), fat: text(e.fat) }
     : { name: '', meal: mealForHour(new Date().getHours()), kcal: '', protein: '', carbs: '', fat: '' };
+const prefillDraft = (p: FoodPrefill): FoodDraft => ({
+  name: p.name,
+  meal: mealForHour(new Date().getHours()),
+  kcal: p.kcal !== undefined ? String(Math.round(p.kcal)) : '',
+  protein: text(p.protein ?? 0),
+  carbs: text(p.carbs ?? 0),
+  fat: text(p.fat ?? 0),
+});
 
-function FoodSheet({ entry, date, onClose }: { entry: FoodEntry | 'new' | null; date: LocalDate; onClose: () => void }) {
+/** The manual form edits an existing entry, starts blank, or starts from a lookup. */
+type FoodTarget = FoodEntry | 'new' | { prefill: FoodPrefill } | null;
+const PREFILL_NOTE: Record<NonNullable<FoodPrefill['reason']>, Key | null> = {
+  missing: 'food.noteMissing',
+  notFound: 'food.noteNotFound',
+  edit: 'food.noteEdit',
+  manual: null,
+};
+
+function FoodSheet({ entry, date, onClose }: { entry: FoodTarget; date: LocalDate; onClose: () => void }) {
   const foodLog = useData((s) => s.foodLog);
-  const editing = entry && entry !== 'new' ? entry : null;
+  const prefill = entry && typeof entry === 'object' && 'prefill' in entry ? entry.prefill : null;
+  const editing = entry && entry !== 'new' && !prefill ? (entry as FoodEntry) : null;
+  const note = prefill?.reason ? PREFILL_NOTE[prefill.reason] : null;
   const [d, setD] = useState<FoodDraft>(() => foodDraft(null));
   const set = (patch: Partial<FoodDraft>) => setD((v) => ({ ...v, ...patch }));
   const recent = useMemo(() => recentFoods(foodLog, 6), [foodLog]);
 
   useEffect(() => {
-    if (entry) setD(foodDraft(entry === 'new' ? null : entry));
+    if (entry) setD(prefill ? prefillDraft(prefill) : foodDraft(entry === 'new' ? null : (entry as FoodEntry)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entry]);
 
   const macros = { protein: parseDecimal(d.protein) ?? 0, carbs: parseDecimal(d.carbs) ?? 0, fat: parseDecimal(d.fat) ?? 0 };
@@ -247,14 +280,24 @@ function FoodSheet({ entry, date, onClose }: { entry: FoodEntry | 'new' | null; 
     if (!name) return toast(t('nut.errName'), 'error');
     const kcalValue = d.kcal.trim() === '' ? implied : parseDecimal(d.kcal);
     if (kcalValue === null || (kcalValue === 0 && implied === 0)) return toast(t('nut.errFood'), 'error');
+    const kcalRounded = Math.round(kcalValue);
+    // Editing a looked-up entry keeps its serving data only if the numbers weren't changed.
+    const unchanged =
+      editing && editing.kcal === kcalRounded && editing.protein === macros.protein && editing.carbs === macros.carbs && editing.fat === macros.fat;
+    const keep = unchanged
+      ? { amount: editing.amount, unit: editing.unit, servingLabel: editing.servingLabel, per100: editing.per100, source: editing.source }
+      : { source: 'manual' as const };
     useData.getState().saveFood({
       id: editing?.id ?? uid(),
       date: editing?.date ?? date,
       createdAt: editing?.createdAt ?? new Date().toISOString(),
       meal: d.meal,
       name: name.slice(0, 60),
-      kcal: Math.round(kcalValue),
+      kcal: kcalRounded,
       ...macros,
+      brand: editing?.brand ?? prefill?.brand,
+      barcode: editing?.barcode ?? prefill?.barcode,
+      ...keep,
     });
     toast(t(editing ? 'nut.foodSaved' : 'nut.foodAdded'), 'success');
     onClose();
@@ -276,6 +319,12 @@ function FoodSheet({ entry, date, onClose }: { entry: FoodEntry | 'new' | null; 
         </button>
       }
     >
+      {note && (
+        <p className="food-note">
+          <Icon name="info" size={18} />
+          <span>{t(note, { code: prefill?.barcode ?? '' })}</span>
+        </p>
+      )}
       <label className="field food-name">
         <span>{t('nut.foodName')}</span>
         <input
@@ -307,7 +356,7 @@ function FoodSheet({ entry, date, onClose }: { entry: FoodEntry | 'new' | null; 
       </div>
       <p className="food-hint">{t('nut.kcalHint')}</p>
 
-      {!editing && recent.length > 0 && (
+      {!editing && !prefill && recent.length > 0 && (
         <>
           <div className="food-recent-title">{t('nut.recent')}</div>
           <div className="food-recent">

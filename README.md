@@ -40,8 +40,10 @@ src/
 
 Key decisions:
 
-- **Minimal dependencies.** Runtime deps are React and Zustand only. Charts, icons, router, animations
-  and the service worker are hand-written for size and control.
+- **Minimal dependencies.** Runtime deps are React and Zustand, plus `barcode-detector` (MIT) for
+  scanning, because iPhone Safari has no built-in barcode reader. It is imported only when the scanner
+  opens, and its WebAssembly file (~950 KB) is served from this site, not a CDN. Charts, icons, router,
+  animations and the service worker are hand-written for size and control.
 - **Derived, not stored.** PRs, streaks and stats are computed from workout history, so editing or
   deleting a workout can never leave stale records behind.
 - **Canonical units.** Weights are stored in kg and lengths in cm; conversion happens only in the UI.
@@ -105,7 +107,34 @@ targets, what has been eaten, what is left, and the day's food log.
   get a deficit, and protein is capped for very high body weights.
 - **Derived, not stored:** only the answers are saved. Targets are recalculated from them and the
   latest body-weight entry, so logging a new weight or editing the plan updates them immediately.
-- Foods are entered by hand (name, calories, macros). There is no food database or recipes.
+
+### Logging food
+
+**Add Food** opens one sheet: a search box, a **Scan** button, results, and **Enter manually**.
+
+- **Common foods** (`src/data/foods.ts`): 77 everyday foods (rice, bread, eggs, chicken, dates, laban,
+  cola…) with Arabic names and USDA household servings. They are generated from **USDA FoodData Central**
+  (SR Legacy, public domain) and work instantly and offline. Drinks are converted to per 100 ml with each
+  drink's measured weight. Regenerate the file rather than editing numbers by hand.
+- **Products and barcodes** come from **Open Food Facts** (`src/lib/foodApi.ts`): free, no API key,
+  ODbL licensed, credited where shown.
+  - Barcode lookup is fast and reliable.
+  - Text search is rate-limited by the server (about 10 per minute) and is often slow or busy, so it
+    runs only when asked or when nothing on the device matches. The client keeps under the limit and
+    caches results.
+- **Codes** (`src/domain/food.ts`, `parseScannedCode`):
+  - Accepted: EAN-13, EAN-8, UPC-A and UPC-E (expanded), checked with their check digit so a misread is
+    rejected.
+  - QR codes are accepted when they identify a product: GS1 Digital Link (`https://…/01/<GTIN>`) or
+    GS1 element strings. Products are keyed by barcode, so QR alone could not cover them.
+- **Never 0 kcal by accident:** a product with no usable nutrition (energy missing, impossible, or 0
+  with no macros) can't be logged as-is. It opens the manual form pre-filled, asking for the label
+  values. Individual missing macros are flagged.
+- **Camera** (`src/lib/scanner.ts`): needs https. On the LAN `http://` address, type the barcode
+  instead. Denied, missing or busy cameras each get a clear message, and typing the number always
+  works.
+- Logged entries keep their serving, barcode and per-100 values, so a scanned product is in Recent
+  next time, even offline. Every value stays editable.
 
 ## Languages
 

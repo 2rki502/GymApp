@@ -777,3 +777,466 @@
 .food-empty p:last-child {
   margin-bottom: 0;
 }
+
+/* ─── Food finder: search, scan, serving picker ─────────────────────────── */
+.ff {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 12px;
+}
+.ff-bar {
+  display: flex;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 2px 0 6px;
+  background: var(--glass-strong);
+}
+.ff-search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.ff-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px; /* 16px stops iOS from zooming into the field */
+}
+.ff-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.ff-clear {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--text-2);
+  position: relative;
+}
+.ff-clear::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+.ff-scan {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 650;
+  font-size: 15px;
+}
+.ff-scan:active {
+  opacity: 0.85;
+}
+.ff-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 4px 8px;
+}
+.ff-list {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.ff-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 12px 8px 14px;
+  text-align: start;
+  width: 100%;
+}
+.ff-list > * + * {
+  border-top: 1px solid var(--separator);
+}
+.ff-row:active {
+  background: var(--fill-soft);
+}
+.ff-thumb {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surface-3);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--text-3);
+}
+.ff-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ff-main strong {
+  font-size: 16px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ff-main span {
+  font-size: 13px;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ff-kcal {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 14px;
+  color: var(--text-2);
+  text-align: end;
+}
+.ff-kcal .num {
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--text);
+}
+.ff-kcal small {
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.ff-missing {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--orange);
+}
+.ff-chev {
+  flex: none;
+  color: var(--text-3);
+}
+.ff-action {
+  color: var(--accent-fg);
+  font-weight: 600;
+  font-size: 15.5px;
+}
+.ff-manual {
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.ff-status {
+  padding: 14px;
+  font-size: 14.5px;
+  color: var(--text-2);
+}
+.ff-problem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  font-size: 14.5px;
+  color: var(--text-2);
+}
+.ff-credit {
+  font-size: 11.5px;
+  color: var(--text-3);
+  padding: 0 4px;
+  text-align: center;
+}
+.ff-section .ff-credit {
+  padding-top: 8px;
+}
+
+/* Scan */
+.ff-scanview {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ff-camera {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #000;
+}
+.ff-camera video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.ff-camera.is-live video {
+  opacity: 1;
+}
+.ff-frame {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 30%;
+  bottom: 30%;
+  border: 3px solid var(--accent);
+  border-radius: 14px;
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.35);
+}
+.ff-camera-msg {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 14.5px;
+  text-align: center;
+}
+.ff-typecode {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.ff-typecode label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.ff-typecode input {
+  height: 46px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 0;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+}
+.ff-typecode .btn {
+  height: 46px;
+}
+
+/* Detail */
+.ff-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 12px;
+}
+.ff-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ff-head-img {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--surface-3);
+  color: var(--text-3);
+}
+/* Photos fade in on a white card once loaded; until then the neutral placeholder shows. */
+.ff-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.ff-img.is-ready {
+  opacity: 1;
+  background: #fff;
+}
+.ff-head h2 {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.ff-head p {
+  font-size: 14px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.ff-servings {
+  flex-wrap: wrap;
+}
+.ff-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.ff-count button {
+  width: 48px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+}
+.ff-count button:disabled {
+  opacity: 0.3;
+}
+.ff-count strong {
+  min-width: 44px;
+  text-align: center;
+  font-size: 18px;
+}
+.ff-amount-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ff-amount-input .input {
+  max-width: 140px;
+  font-size: 18px;
+}
+.ff-amount-input span {
+  color: var(--text-2);
+  font-size: 15px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.ff-totals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.ff-kcal-big {
+  display: flex;
+  flex-direction: column;
+  min-width: 76px;
+}
+.ff-kcal-big strong {
+  font-size: 30px;
+  line-height: 1.1;
+}
+.ff-kcal-big span {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.ff-macros {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.ff-macros div {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.ff-macros strong {
+  font-size: 16px;
+  color: var(--text);
+}
+.ff-macros .is-missing strong {
+  color: var(--orange);
+}
+.ff-for {
+  width: 100%;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.ff-note {
+  font-size: 13.5px;
+  color: var(--orange);
+  padding: 0 4px;
+  margin-top: -6px;
+}
+.ff-warn {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: rgba(255, 159, 10, 0.12);
+  color: var(--orange);
+}
+.ff-warn > svg {
+  flex: none;
+  margin-top: 2px;
+}
+.ff-warn strong {
+  display: block;
+  color: var(--text);
+  font-size: 16px;
+}
+.ff-warn p {
+  color: var(--text-2);
+  font-size: 14px;
+  margin: 4px 0 12px;
+}
+.ff-add {
+  margin-top: 4px;
+}
+.ff-edit {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+/* Manual form: why it opened, and the serving on logged entries */
+.food-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  margin-bottom: 4px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 14px;
+}
+.food-note svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--accent-fg);
+}
+.food-serving {
+  display: block;
+  font-size: 13px;
+  color: var(--text-2);
+}
